@@ -89,6 +89,25 @@ src/
 
 ---
 
+## Demo Login Accounts
+
+### Role Admin
+
+Email: [admin@gmail.com](mailto:admin@gmail.com)
+Password: admin
+
+### Role Buyer
+
+Email: [buyer@gmail.com](mailto:buyer@gmail.com)
+Password: buyer
+
+### Role Seller
+
+Email: [seller@gmail.com](mailto:seller@gmail.com)
+Password: seller
+
+---
+
 ## Link Project
 
 ### GitHub Repository
