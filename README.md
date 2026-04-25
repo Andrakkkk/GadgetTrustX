@@ -123,7 +123,7 @@ https://github.com/username/smart-device-marketplace
 Tambahkan link deploy website di sini
 
 ```text
-https://smart-device-marketplace.vercel.app
+https://gadget-trustx.netlify.app/
 ```
 
 ---
