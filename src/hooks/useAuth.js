@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { getSupabasePassword } from '@/lib/authPassword';
 import { createClient } from '@/lib/supabase/client';
 
 const AuthContext = createContext();
@@ -88,7 +89,7 @@ export function AuthProvider({ children }) {
 
     try {
       const { data, error } = await withTimeout(
-        supabase.auth.signInWithPassword({ email, password }),
+        supabase.auth.signInWithPassword({ email, password: getSupabasePassword(password) }),
         15000,
         'Login terlalu lama. Coba lagi.'
       );

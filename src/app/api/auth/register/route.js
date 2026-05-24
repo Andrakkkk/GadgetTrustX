@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getSupabasePassword } from '@/lib/authPassword';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const allowedRoles = new Set(['buyer', 'seller']);
@@ -14,7 +15,7 @@ export async function POST(request) {
   const supabase = createAdminClient();
   const { data, error } = await supabase.auth.admin.createUser({
     email: body.email,
-    password: body.password,
+    password: getSupabasePassword(body.password),
     email_confirm: true,
     user_metadata: {
       name: body.name,

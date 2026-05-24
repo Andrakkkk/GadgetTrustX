@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getSupabasePassword } from '@/lib/authPassword';
 import { getRequestUser } from '@/lib/supabase/auth';
 
 function mapUser(profile) {
@@ -46,7 +47,7 @@ export async function POST(request) {
   const body = await request.json();
   const { data, error } = await result.supabase.auth.admin.createUser({
     email: body.email,
-    password: body.password,
+    password: getSupabasePassword(body.password),
     email_confirm: true,
     user_metadata: {
       name: body.name,
@@ -83,7 +84,7 @@ export async function PATCH(request) {
   const body = await request.json();
   if (body.password) {
     const { error: passwordError } = await result.supabase.auth.admin.updateUserById(body.id, {
-      password: body.password,
+      password: getSupabasePassword(body.password),
     });
     if (passwordError) {
       return NextResponse.json({ error: passwordError.message }, { status: 500 });
