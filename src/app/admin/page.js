@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import AuthGuard from '@/components/AuthGuard';
 import { formatPrice } from '@/utils/formatPrice';
+import { apiFetch } from '@/lib/api-client';
 
 export default function AdminPage() {
-    const { user } = useAuth();
+    const { user, isLoading } = useAuth();
     const [activeTab, setActiveTab] = useState('dashboard');
 
     const [returnRequests, setReturnRequests] = useState([]);
@@ -16,6 +17,33 @@ export default function AdminPage() {
     // Modals state
     const [editingProduct, setEditingProduct] = useState(null);
     const [editingUser, setEditingUser] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, orderId: null, itemId: null, action: null });
+
+    const loadData = async () => {
+        const ordersResponse = await apiFetch('/api/orders?scope=all');
+        const ordersData = await ordersResponse.json();
+        const parsedOrders = ordersData.orders || [];
+        setAllOrders(parsedOrders);
+
+        const reqs = [];
+        parsedOrders.forEach(order => {
+            order.items.forEach((item, idx) => {
+                if (item.returnStatus === 'Pending') {
+                    reqs.push({ orderId: order.id, buyerEmail: order.buyerEmail, item, itemIndex: idx });
+                }
+            });
+        });
+        setReturnRequests(reqs);
+
+        // Products
+        const devicesResponse = await fetch('/api/devices');
+        const devicesData = await devicesResponse.json();
+        setAllProducts(devicesData.devices || []);
+
+        const usersResponse = await apiFetch('/api/admin/users');
+        const usersData = await usersResponse.json();
+        setAllUsers(usersData.users || []);
+    };
 
     useEffect(() => {
         if (user?.role === 'admin') {
@@ -23,142 +51,157 @@ export default function AdminPage() {
         }
     }, [user]);
 
-    const loadData = () => {
-        // Orders
-        const savedOrders = localStorage.getItem('gadgetTrustX_orders');
-        if (savedOrders) {
-            const parsedOrders = JSON.parse(savedOrders);
-            setAllOrders(parsedOrders);
-
-            const reqs = [];
-            parsedOrders.forEach(order => {
-                order.items.forEach(item => {
-                    if (item.returnStatus === 'Pending') {
-                        reqs.push({ orderId: order.id, buyerEmail: order.buyerEmail, item: item });
-                    }
-                });
-            });
-            setReturnRequests(reqs);
-        }
-
-        // Products
-        const savedDevices = localStorage.getItem('gadgetTrustX_devices');
-        if (savedDevices) {
-            let parsed = JSON.parse(savedDevices);
-            let updated = false;
-            // Ensure we import dummyDevices at the top of the file if needed, but since it's admin,
-            // we'll just let marketplace handle the main seeding, or we can just read.
-            setAllProducts(parsed);
-        }
-
-        // Users
-        let savedUsers = localStorage.getItem('gadgetTrustX_users');
-        if (!savedUsers) {
-            const defaultUsers = [
-                { id: 'user_1', email: 'admin@gmail.com', name: 'Admin', role: 'admin', password: 'admin' },
-                { id: 'user_2', email: 'buyer@gmail.com', name: 'Test Buyer', role: 'buyer', password: 'buyer' },
-                { id: 'user_3', email: 'seller@gmail.com', name: 'Test Seller', role: 'seller', password: 'seller' }          ];
-            localStorage.setItem('gadgetTrustX_users', JSON.stringify(defaultUsers));
-            setAllUsers(defaultUsers);
-        } else {
-            setAllUsers(JSON.parse(savedUsers));
-        }
-    };
-
     // --- Orders Logic ---
-    const handleOrderStatus = (orderId, newStatus) => {
-        const updated = allOrders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
-        localStorage.setItem('gadgetTrustX_orders', JSON.stringify(updated));
-        setAllOrders(updated);
+    const handleOrderStatus = async (orderId, newStatus) => {
+        const response = await apiFetch('/api/orders', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: orderId, status: newStatus }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            alert(data.error || 'Failed to update order.');
+            return;
+        }
+        setAllOrders((items) => items.map((order) => order.id === orderId ? data.order : order));
     };
 
-    const handleReturnAction = (orderId, itemId, action) => {
-        if (!confirm(`Are you sure you want to ${action} this return?`)) return;
+    const handleReturnAction = async (orderId, itemIndex, action) => {
+        const item = allOrders.find((order) => order.id === orderId)?.items[itemIndex];
+        if (!item) return;
 
-        let updatedOrders = [...allOrders];
-        let found = false;
-        for (let i = 0; i < updatedOrders.length; i++) {
-            if (updatedOrders[i].id === orderId) {
-                for (let j = 0; j < updatedOrders[i].items.length; j++) {
-                    if (updatedOrders[i].items[j].id === itemId) {
-                        updatedOrders[i].items[j].returnStatus = action === 'approve' ? 'Approved' : 'Rejected';
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (found) break;
+        const response = await apiFetch('/api/orders/returns', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderItemId: item.orderItemId, action }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            alert(data.error || 'Failed to update return request.');
+            return;
         }
 
-        if (found) {
-            localStorage.setItem('gadgetTrustX_orders', JSON.stringify(updatedOrders));
-            setAllOrders(updatedOrders);
-            setReturnRequests(returnRequests.filter(req => !(req.orderId === orderId && req.item.id === itemId)));
-        }
+        await loadData();
+        setConfirmModal({ isOpen: false, orderId: null, itemId: null, itemIndex: null, action: null });
+        alert(`Return request ${action}d successfully.`);
     };
 
     // --- Products Logic ---
-    const handleDeleteProduct = (productId) => {
+    const handleDeleteProduct = async (productId) => {
         if (!confirm('Are you sure you want to delete this product?')) return;
+        await apiFetch(`/api/devices/${productId}`, { method: 'DELETE' });
         const updated = allProducts.filter(p => p.id !== productId);
-        localStorage.setItem('gadgetTrustX_devices', JSON.stringify(updated));
         setAllProducts(updated);
     };
 
-    const handleSaveProduct = (e) => {
+    const handleSaveProduct = async (e) => {
         e.preventDefault();
+        await apiFetch(`/api/devices/${editingProduct.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(editingProduct),
+        });
         const updated = allProducts.map(p => p.id === editingProduct.id ? editingProduct : p);
-        localStorage.setItem('gadgetTrustX_devices', JSON.stringify(updated));
         setAllProducts(updated);
         setEditingProduct(null);
     };
 
-    const handleVerifyProduct = (productId) => {
+    const handleVerifyProduct = async (productId) => {
+        const current = allProducts.find((product) => product.id === productId);
+        if (!current) return;
+        const nextProduct = { ...current, verifiedByTrustX: !current.verifiedByTrustX };
+        await apiFetch(`/api/devices/${productId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nextProduct),
+        });
         const updated = allProducts.map(p => {
             if (p.id === productId) {
-                return { ...p, verifiedByTrustX: !p.verifiedByTrustX };
+                return nextProduct;
             }
             return p;
         });
-        localStorage.setItem('gadgetTrustX_devices', JSON.stringify(updated));
         setAllProducts(updated);
     };
 
     // --- Users Logic ---
-    const handleDeleteUser = (userId) => {
+    const handleDeleteUser = async (userId) => {
         if (!confirm('Are you sure you want to delete this user?')) return;
-        const updated = allUsers.filter(u => u.id !== userId);
-        localStorage.setItem('gadgetTrustX_users', JSON.stringify(updated));
-        setAllUsers(updated);
+        const response = await apiFetch('/api/admin/users', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: userId }),
+        });
+        if (response.ok) {
+            setAllUsers((items) => items.filter((item) => item.id !== userId));
+        }
     };
 
-    const handleSaveUser = (e) => {
+    const handleSaveUser = async (e) => {
         e.preventDefault();
         if (editingUser.id === 'new') {
-            const newUser = { ...editingUser, id: 'user_' + Date.now() };
-            const updated = [...allUsers, newUser];
-            localStorage.setItem('gadgetTrustX_users', JSON.stringify(updated));
-            setAllUsers(updated);
+            if (!editingUser.password) { alert('Password is required for new users.'); return; }
+            const response = await apiFetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editingUser),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.error || 'Failed to create user.');
+                return;
+            }
+            setAllUsers((items) => [...items, data.user]);
         } else {
-            const updated = allUsers.map(u => u.id === editingUser.id ? editingUser : u);
-            localStorage.setItem('gadgetTrustX_users', JSON.stringify(updated));
-            setAllUsers(updated);
+            const response = await apiFetch('/api/admin/users', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editingUser),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.error || 'Failed to save user.');
+                return;
+            }
+            setAllUsers((items) => items.map((item) => item.id === editingUser.id ? data.user : item));
         }
         setEditingUser(null);
     };
 
-    const handleVerifyUser = (userId) => {
-        const updated = allUsers.map(u => {
-            if (u.id === userId) {
-                return { ...u, isVerified: !u.isVerified };
-            }
-            return u;
+    const handleVerifyUser = async (userId) => {
+        const current = allUsers.find((item) => item.id === userId);
+        if (!current) return;
+        const response = await apiFetch('/api/admin/users', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...current, isVerified: !current.isVerified }),
         });
-        localStorage.setItem('gadgetTrustX_users', JSON.stringify(updated));
-        setAllUsers(updated);
+        const data = await response.json();
+        if (response.ok) {
+            setAllUsers((items) => items.map((item) => item.id === userId ? data.user : item));
+        }
     };
 
-    if (user?.role !== 'admin') {
+    const handleToggleBadge = async (userId, badge) => {
+        const currentUser = allUsers.find((item) => item.id === userId);
+        if (!currentUser) return;
+        const current = currentUser.badges || [];
+        const hasBadge = current.includes(badge);
+        const badges = hasBadge ? current.filter((item) => item !== badge) : [...current, badge];
+        const response = await apiFetch('/api/admin/users', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...currentUser, badges }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            alert(data.error || 'Failed to update badge.');
+            return;
+        }
+        setAllUsers((items) => items.map((item) => item.id === userId ? data.user : item));
+    };
+
+    if (isLoading || user?.role !== 'admin') {
         return (
             <AuthGuard>
                 <div className="flex justify-center items-center h-96">
@@ -172,32 +215,32 @@ export default function AdminPage() {
 
     return (
         <AuthGuard>
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto px-4 pt-32 pb-8">
                 <h1 className="text-3xl font-bold text-white mb-6">Admin Dashboard</h1>
 
                 {/* Navigation Tabs */}
-                <div className="flex border-b border-slate-700 mb-8 overflow-x-auto">
+                <div className="flex border-b border-slate-700 mb-8 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
                     <button
                         onClick={() => setActiveTab('dashboard')}
-                        className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === 'dashboard' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                        className={`px-6 py-3 font-bold text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'dashboard' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                     >
                         Overview
                     </button>
                     <button
                         onClick={() => setActiveTab('orders')}
-                        className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === 'orders' ? 'border-amber-500 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                        className={`px-6 py-3 font-bold text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'orders' ? 'border-amber-500 text-amber-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                     >
                         Orders ({allOrders.filter(o => o.status !== 'Completed').length})
                     </button>
                     <button
                         onClick={() => setActiveTab('products')}
-                        className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === 'products' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                        className={`px-6 py-3 font-bold text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'products' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                     >
                         Products ({allProducts.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('users')}
-                        className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === 'users' ? 'border-purple-500 text-purple-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                        className={`px-6 py-3 font-bold text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'users' ? 'border-purple-500 text-purple-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                     >
                         Users ({allUsers.length})
                     </button>
@@ -222,40 +265,64 @@ export default function AdminPage() {
                         </div>
 
                         <div className="glass-panel p-8">
-                            <h2 className="text-xl font-bold text-white mb-4 border-b border-slate-700 pb-2">Pending Return Requests</h2>
+                            <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-700/50">
+                                <h2 className="text-xl font-black text-white uppercase tracking-tighter">Pending Return Requests</h2>
+                                <span className="px-3 py-1 bg-amber-500/10 text-amber-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-500/20 animate-pulse">
+                                    Action Required
+                                </span>
+                            </div>
+
                             {returnRequests.length === 0 ? (
-                                <p className="text-slate-400 text-center py-6">No pending return requests at the moment.</p>
+                                <div className="py-20 text-center">
+                                    <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-800">
+                                        <svg className="w-8 h-8 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">No pending requests</p>
+                                </div>
                             ) : (
-                                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {returnRequests.map((req, idx) => (
-                                        <div key={idx} className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <p className="font-semibold text-white">{req.item.name}</p>
-                                                    <p className="text-xs text-slate-400">Order ID: {req.orderId}</p>
-                                                    <p className="text-xs text-slate-400">Buyer: {req.buyerEmail}</p>
+                                        <div key={idx} className="bg-slate-900/50 rounded-3xl border border-slate-800 overflow-hidden flex flex-col group hover:border-blue-500/30 transition-all">
+                                            <div className="p-6 flex-grow">
+                                                <div className="flex gap-4 mb-6">
+                                                    <div className="w-16 h-16 rounded-2xl bg-slate-800 overflow-hidden border border-white/5 flex-shrink-0">
+                                                        <img src={req.item.image} className="w-full h-full object-cover" alt="Product" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-white text-lg leading-tight mb-1">{req.item.name}</h4>
+                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Order: <span className="text-slate-300">#{req.orderId.slice(-8)}</span></p>
+                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Buyer: <span className="text-blue-400">{req.buyerEmail}</span></p>
+                                                    </div>
                                                 </div>
-                                                <span className="bg-amber-500/20 text-amber-400 px-2 py-1 rounded text-xs border border-amber-500/30">Action Required</span>
-                                            </div>
-                                            <div className="bg-slate-900/50 p-3 rounded mt-3 mb-3 border border-slate-700/30">
-                                                <p className="text-sm text-slate-300"><span className="text-slate-500 mr-2">Reason:</span>{req.item.returnReason}</p>
-                                            </div>
-                                            {req.item.returnImage && (
-                                                <div className="mb-4">
-                                                    <p className="text-xs text-slate-500 mb-2">Attached Proof:</p>
-                                                    <img src={req.item.returnImage} alt="Return proof" className="w-full max-w-sm h-auto object-contain rounded-lg border border-slate-700 shadow-md" />
+
+                                                <div className="bg-slate-950/50 p-4 rounded-2xl border border-white/5 mb-6">
+                                                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2">Reason for Return</p>
+                                                    <p className="text-sm text-slate-200 leading-relaxed font-medium">"{req.item.returnReason}"</p>
                                                 </div>
-                                            )}
-                                            <div className="flex gap-2 border-t border-slate-700/50 pt-3">
+
+                                                {req.item.returnImage && (
+                                                    <div className="mb-6">
+                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3">Evidence Attached</p>
+                                                        <div className="relative group/img rounded-2xl overflow-hidden border border-white/5 aspect-video bg-black">
+                                                            <img src={req.item.returnImage} alt="Return proof" className="w-full h-full object-contain" />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <button onClick={() => window.open(req.item.returnImage)} className="p-2 bg-white/10 backdrop-blur-md rounded-xl text-white text-xs font-black uppercase tracking-widest">View Full Size</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="grid grid-cols-2 border-t border-slate-800">
                                                 <button
-                                                    onClick={() => handleReturnAction(req.orderId, req.item.id, 'approve')}
-                                                    className="flex-1 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 py-2 rounded text-sm transition-colors"
+                                                    onClick={() => setConfirmModal({ isOpen: true, orderId: req.orderId, itemIndex: req.itemIndex, action: 'approve' })}
+                                                    className="py-4 bg-blue-500/5 text-blue-500 hover:bg-blue-600 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all border-r border-slate-800"
                                                 >
                                                     Approve Return
                                                 </button>
                                                 <button
-                                                    onClick={() => handleReturnAction(req.orderId, req.item.id, 'reject')}
-                                                    className="flex-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 py-2 rounded text-sm transition-colors"
+                                                    onClick={() => setConfirmModal({ isOpen: true, orderId: req.orderId, itemIndex: req.itemIndex, action: 'reject' })}
+                                                    className="py-4 bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all"
                                                 >
                                                     Reject
                                                 </button>
@@ -275,48 +342,84 @@ export default function AdminPage() {
                         {allOrders.length === 0 ? (
                             <p className="text-slate-400 text-center">No orders found.</p>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-slate-700 text-slate-400 text-sm">
-                                            <th className="pb-3 px-4 font-semibold">Order ID</th>
-                                            <th className="pb-3 px-4 font-semibold">Buyer</th>
-                                            <th className="pb-3 px-4 font-semibold">Total</th>
-                                            <th className="pb-3 px-4 font-semibold">Date</th>
-                                            <th className="pb-3 px-4 font-semibold">Status</th>
-                                            <th className="pb-3 px-4 font-semibold">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {allOrders.map(order => (
-                                            <tr key={order.id} className="border-b border-slate-700/50 hover:bg-slate-800/30">
-                                                <td className="py-4 px-4 text-white text-sm font-mono">{order.id}</td>
-                                                <td className="py-4 px-4 text-slate-300 text-sm">{order.buyerEmail}</td>
-                                                <td className="py-4 px-4 text-emerald-400 text-sm font-bold">{formatPrice(order.total)}</td>
-                                                <td className="py-4 px-4 text-slate-400 text-sm">{order.date}</td>
-                                                <td className="py-4 px-4">
-                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${order.status === 'Completed' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : order.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
-                                                        {order.status}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 px-4">
-                                                    <select
-                                                        className="bg-slate-800 border border-slate-600 text-white text-sm rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-                                                        value={order.status}
-                                                        onChange={(e) => handleOrderStatus(order.id, e.target.value)}
-                                                        disabled={order.status === 'Completed'}
-                                                    >
-                                                        <option value="Pending">Pending</option>
-                                                        <option value="Processing">Processing</option>
-                                                        <option value="Shipped">Shipped</option>
-                                                        <option value="Delivered">Delivered</option>
-                                                        <option value="Completed">Completed</option>
-                                                    </select>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                            <div className="space-y-4">
+                                {allOrders.map(order => {
+                                    const isLocked = ['Completed', 'Returned', 'Cancelled'].includes(order.status) ||
+                                        order.items?.some(i => i.returnStatus === 'Pending' || i.returnStatus === 'Approved');
+                                    return (
+                                        <div key={order.id} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
+                                            {/* Order Header */}
+                                            <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 border-b border-slate-700/50">
+                                                <div className="flex items-center gap-4">
+                                                    <div>
+                                                        <p className="text-xs text-slate-500 font-mono">{order.id}</p>
+                                                        <p className="text-sm text-slate-300">{order.buyerEmail}</p>
+                                                    </div>
+                                                    <div className="hidden sm:block h-8 w-px bg-slate-700"></div>
+                                                    <div>
+                                                        <p className="text-xs text-slate-500">Date</p>
+                                                        <p className="text-sm text-white">{order.date}</p>
+                                                    </div>
+                                                    <div className="hidden sm:block h-8 w-px bg-slate-700"></div>
+                                                    <div>
+                                                        <p className="text-xs text-slate-500">Total</p>
+                                                        <p className="text-sm font-bold text-emerald-400">{formatPrice(order.total)}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
+                                                        order.status === 'Completed' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                                                        order.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                                                        order.status === 'Partially Returned' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                                                        order.status === 'Returned' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                                                        order.status === 'Shipped' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                                                        'bg-slate-700/50 text-slate-400 border-slate-600'
+                                                    }`}>{order.status}</span>
+                                                    {isLocked ? (
+                                                        <span className="text-xs text-slate-500 italic">Status locked</span>
+                                                    ) : (
+                                                        <select
+                                                            className="bg-slate-900 border border-slate-600 text-white text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500"
+                                                            value={order.status}
+                                                            onChange={(e) => handleOrderStatus(order.id, e.target.value)}
+                                                        >
+                                                            <option value="Processing">Processing</option>
+                                                            <option value="Shipped">Shipped</option>
+                                                            <option value="Delivered">Delivered</option>
+                                                            <option value="Completed">Completed</option>
+                                                            <option value="Cancelled">Cancelled</option>
+                                                        </select>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {/* Items */}
+                                            <div className="divide-y divide-slate-700/30">
+                                                {order.items?.map((item, idx) => (
+                                                    <div key={item.orderItemId || idx} className="flex items-center gap-4 px-5 py-3">
+                                                        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-slate-900 flex-shrink-0" />
+                                                        <div className="flex-grow min-w-0">
+                                                            <p className="text-sm text-white font-semibold truncate">{item.name}</p>
+                                                            <p className="text-xs text-slate-500">{item.brand} · {formatPrice(item.price)}</p>
+                                                        </div>
+                                                        <div className="flex-shrink-0">
+                                                            {item.returnStatus === 'Pending' ? (
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30">↩ Return Pending</span>
+                                                            ) : item.returnStatus === 'Approved' ? (
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-500/15 text-blue-400 border border-blue-500/30">✓ Returned</span>
+                                                            ) : item.returnStatus === 'Rejected' ? (
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/15 text-red-400 border border-red-500/30">✕ Return Rejected</span>
+                                                            ) : order.ratedItems?.includes(item.orderItemId) ? (
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">★ Rated</span>
+                                                            ) : (
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-700/50 text-slate-500 border border-slate-700">Pending Review</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -365,7 +468,7 @@ export default function AdminPage() {
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-white">Manage Users</h2>
                             <button
-                                onClick={() => setEditingUser({ id: 'new', name: '', email: '', role: 'buyer' })}
+                                onClick={() => setEditingUser({ id: 'new', name: '', email: '', password: '', role: 'buyer' })}
                                 className="btn-primary px-4 py-2 text-sm"
                             >
                                 + Add User
@@ -378,6 +481,7 @@ export default function AdminPage() {
                                         <th className="pb-3 px-4 font-semibold">Name</th>
                                         <th className="pb-3 px-4 font-semibold">Email</th>
                                         <th className="pb-3 px-4 font-semibold">Role</th>
+                                        <th className="pb-3 px-4 font-semibold">Badges (Seller)</th>
                                         <th className="pb-3 px-4 font-semibold">Actions</th>
                                     </tr>
                                 </thead>
@@ -391,10 +495,27 @@ export default function AdminPage() {
                                                     {u.role}
                                                 </span>
                                             </td>
+                                            <td className="py-4 px-4">
+                                                {u.role === 'seller' && (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {['Top Rated', 'Fast Shipper', 'Verified ID', 'Best Price', 'Responsive'].map(badge => {
+                                                            const has = (u.badges || []).includes(badge);
+                                                            return (
+                                                                <button key={badge} type="button"
+                                                                    onClick={() => handleToggleBadge(u.id, badge)}
+                                                                    className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${has ? 'bg-blue-500/20 text-blue-300 border-blue-500/40' : 'bg-slate-800 text-slate-500 border-slate-700 hover:border-blue-500/40 hover:text-blue-400'}`}
+                                                                >
+                                                                    {has ? '✓ ' : ''}{badge}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </td>
                                             <td className="py-4 px-4 space-x-2">
                                                 <button onClick={() => handleVerifyUser(u.id)} className={`text-xs px-3 py-1 rounded transition-colors ${u.isVerified ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600'}`}>{u.isVerified ? 'Verified' : 'Verify'}</button>
                                                 <button onClick={() => setEditingUser(u)} className="text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 px-3 py-1 rounded transition-colors">Edit</button>
-                                                <button onClick={() => handleDeleteUser(u.id)} className="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1 rounded transition-colors" disabled={u.email === user.email}>Delete</button>
+                                                <button onClick={() => handleDeleteUser(u.id)} className="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1 rounded transition-colors" disabled={u.email === user?.email}>Delete</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -455,6 +576,19 @@ export default function AdminPage() {
                                     <option value="admin">Admin</option>
                                 </select>
                             </div>
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-1">
+                                    Password {editingUser.id !== 'new' && <span className="text-slate-600 text-xs ml-1">(kosongkan untuk tetap sama)</span>}
+                                </label>
+                                <input
+                                    type="password"
+                                    value={editingUser.password || ''}
+                                    onChange={e => setEditingUser({ ...editingUser, password: e.target.value })}
+                                    className="input-field"
+                                    required={editingUser.id === 'new'}
+                                    placeholder={editingUser.id === 'new' ? 'Wajib diisi' : '••••••••'}
+                                />
+                            </div>
                             <div className="flex gap-3 mt-6">
                                 <button type="button" onClick={() => setEditingUser(null)} className="flex-1 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors">Cancel</button>
                                 <button type="submit" className="flex-1 btn-primary px-4 py-2">Save User</button>
@@ -464,6 +598,36 @@ export default function AdminPage() {
                 </div>
             )}
 
+            {/* Confirmation Modal */}
+            {confirmModal.isOpen && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-8 text-center animate-scale-in">
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 ${confirmModal.action === 'approve' ? 'bg-blue-500/10 text-blue-500' : 'bg-red-500/10 text-red-500'}`}>
+                            {confirmModal.action === 'approve' ? (
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                            ) : (
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            )}
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">Confirm {confirmModal.action}al</h3>
+                        <p className="text-slate-400 text-sm mb-8 leading-relaxed">Are you sure you want to <span className="text-white font-bold">{confirmModal.action}</span> this return request? This action cannot be undone.</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                onClick={() => setConfirmModal({ isOpen: false, orderId: null, itemId: null, action: null })}
+                                className="py-3 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleReturnAction(confirmModal.orderId, confirmModal.itemIndex, confirmModal.action)}
+                                className={`py-3 rounded-xl font-bold text-white transition-all ${confirmModal.action === 'approve' ? 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20' : 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20'}`}
+                            >
+                                Yes, {confirmModal.action}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthGuard>
     );
 }

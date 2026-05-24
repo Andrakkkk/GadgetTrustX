@@ -69,7 +69,7 @@ export const dummyDevices = [
     ram: '12GB',
     storage: '256GB',
     chipset: 'Tensor G3',
-    image: 'https://images.unsplash.com/photo-1696446700622-81c850974cb3?auto=format&fit=crop&q=80&w=800',
+    image: 'https://cdn.mos.cms.futurecdn.net/iNYDh4UhWswRhnJtfyF6RC-970-80.jpg.webp',
     seller: {
       id: 'mobile@world.com',
       name: 'MobileWorld',
@@ -109,7 +109,7 @@ export const dummyDevices = [
     ram: '16GB',
     storage: '512GB',
     chipset: 'Snapdragon 8 Gen 2',
-    image: 'https://images.unsplash.com/photo-1601784551446-20c9e07cdbc0?auto=format&fit=crop&q=80&w=800',
+    image: 'https://cdn.dxomark.com/wp-content/uploads/medias/post-144822/Oppo-Find-X6-Pro_featured-image-packshot-review.jpg',
     seller: {
       id: 'oppofans@yahoo.com',
       name: 'Oppo Fans Club',
@@ -129,7 +129,7 @@ export const dummyDevices = [
     ram: '16GB',
     storage: '512GB',
     chipset: 'Snapdragon 8 Gen 2',
-    image: 'https://images.unsplash.com/photo-1592840062402-23f2f01f7864?auto=format&fit=crop&q=80&w=800',
+    image: 'https://dlcdnwebimgs.asus.com/gain/24D0E21F-90B8-47EB-9F5B-AD6D1458D959',
     seller: {
       id: 'gamerzone@gmail.com',
       name: 'Gamer Zone',

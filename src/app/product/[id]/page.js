@@ -4,9 +4,10 @@ import { useRouter } from 'next/navigation';
 import { formatPrice } from '@/utils/formatPrice';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/hooks/useAuth';
+import { apiFetch } from '@/lib/api-client';
 
-const flyToCartAnimation = (e, imageSrc) => {
-  const btn = e.currentTarget;
+const flyToCartAnimation = (btn, imageSrc) => {
+  if (!btn) return;
   const btnRect = btn.getBoundingClientRect();
   const cartIcon = document.getElementById('cart-icon');
   
@@ -56,22 +57,16 @@ export default function ProductDetailPage({ params }) {
   const [selectedReview, setSelectedReview] = useState(null);
 
   useEffect(() => {
-    // Load device
-    const savedDevices = localStorage.getItem('gadgetTrustX_devices');
-    if (savedDevices) {
-      const allDevices = JSON.parse(savedDevices);
-      const found = allDevices.find(d => d.id === id);
-      if (found) setDevice(found);
-    }
+    fetch(`/api/devices/${id}`)
+      .then((res) => res.json())
+      .then((data) => setDevice(data.device || null))
+      .catch(() => setDevice(null))
+      .finally(() => setLoading(false));
     
-    // Load reviews for this device/seller
-    const savedReviews = localStorage.getItem('gadgetTrustX_reviews');
-    if (savedReviews) {
-      const allReviews = JSON.parse(savedReviews);
-      setReviews(allReviews.filter(r => r.deviceId === id));
-    }
-    
-    setLoading(false);
+    fetch(`/api/reviews?deviceId=${encodeURIComponent(id)}`)
+      .then((res) => res.json())
+      .then((data) => setReviews(data.reviews || []))
+      .catch((error) => console.error('Failed to load reviews', error));
   }, [id]);
 
   if (loading) {
@@ -88,48 +83,56 @@ export default function ProductDetailPage({ params }) {
     );
   }
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
+    const triggerButton = e.currentTarget;
     if (!user) {
-      alert("Please login as a Buyer to add items to cart.");
+      router.push('/login');
       return;
     }
-    if (user.role !== 'buyer') {
-      alert("Only buyers can add items to the cart.");
+    if (user.role === 'seller') {
+      alert("Sellers cannot add products to the cart.");
+      return;
+    }
+    if (user.email === device.seller?.id) {
+      alert("Anda tidak bisa membeli produk Anda sendiri.");
       return;
     }
     if (device.stock > 0) {
-      const saved = localStorage.getItem('gadgetTrustX_cart');
-      const cart = saved ? JSON.parse(saved) : [];
-      const existingItemIndex = cart.findIndex(item => item.id === device.id);
-      const currentCount = existingItemIndex !== -1 ? (cart[existingItemIndex].cartQty || 1) : 0;
-      
-      if (currentCount >= device.stock) {
-        alert(`Sorry, the seller only has ${device.stock} in stock!`);
+      const res = await apiFetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId: device.id, quantity: 1 }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Gagal menambahkan ke keranjang.');
         return;
       }
-      
-      if (existingItemIndex !== -1) {
-        cart[existingItemIndex].cartQty = currentCount + 1;
-      } else {
-        cart.push({ ...device, cartQty: 1 });
-      }
-      
-      localStorage.setItem('gadgetTrustX_cart', JSON.stringify(cart));
       window.dispatchEvent(new Event('cartUpdated'));
-      flyToCartAnimation(e, device.image);
+      flyToCartAnimation(triggerButton, device.image);
     }
   };
 
   const handleChat = () => {
     if (!user) {
-      alert("Please login to chat with the seller.");
+      router.push('/login');
       return;
     }
-    window.dispatchEvent(new CustomEvent('openChat', { detail: device.seller }));
+    window.dispatchEvent(new CustomEvent('openChat', { 
+      detail: { 
+        ...device.seller,
+        product: {
+          id: device.id,
+          name: device.name,
+          price: device.price,
+          image: device.image
+        }
+      }
+    }));
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 pt-32 pb-8">
       {/* Breadcrumb */}
       <div className="text-sm text-slate-400 mb-6 flex items-center space-x-2">
         <button onClick={() => router.push('/marketplace')} className="hover:text-blue-400">Marketplace</button>
@@ -161,10 +164,10 @@ export default function ProductDetailPage({ params }) {
             <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white text-xl mr-3">
-                  {device.seller.name.charAt(0)}
+                  {(device.seller?.name || '?').charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-bold text-white">{device.seller.name}</h4>
+                  <h4 className="font-bold text-white">{device.seller?.name || 'Unknown Seller'}</h4>
                   <div className="flex items-center text-sm">
                     <span className="text-amber-400 flex items-center">
                       <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
@@ -180,6 +183,15 @@ export default function ProductDetailPage({ params }) {
                 Chat
               </button>
             </div>
+            {device.seller.badges?.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {device.seller.badges.map((badge) => (
+                  <span key={badge} className="rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-blue-300">
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right: Product Info */}
@@ -216,9 +228,9 @@ export default function ProductDetailPage({ params }) {
                 <p className="text-xs text-slate-400 mb-1">Storage</p>
                 <p className="font-semibold text-white">{device.storage}</p>
               </div>
-              <div className="bg-slate-800/80 p-3 rounded-lg border border-slate-700 text-center">
-                <p className="text-xs text-slate-400 mb-1">Chipset</p>
-                <p className="font-semibold text-white truncate px-1" title={device.chipset || '-'}>{device.chipset || '-'}</p>
+              <div className="bg-slate-800/80 p-3 rounded-lg border border-slate-700 text-center flex flex-col justify-center min-w-0">
+                <p className="text-[10px] text-slate-400 mb-1 uppercase font-black">Chipset</p>
+                <p className="font-bold text-white text-[10px] sm:text-xs break-all" title={device.chipset || '-'}>{device.chipset || '-'}</p>
               </div>
             </div>
 

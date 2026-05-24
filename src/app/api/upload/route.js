@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getRequestUser } from '@/lib/supabase/auth';
 
 export async function POST(request) {
   try {
+    const result = await getRequestUser(request);
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+
     const data = await request.formData();
     const file = data.get('file');
 
@@ -11,23 +16,21 @@ export async function POST(request) {
       return NextResponse.json({ error: "No file received." }, { status: 400 });
     }
 
+    const supabase = createAdminClient();
     const buffer = Buffer.from(await file.arrayBuffer());
-    // Create safe filename
     const filename = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    
-    // Ensure public/uploads exists
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    try {
-      await mkdir(uploadDir, { recursive: true });
-    } catch (e) {
-      // Ignore if already exists
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'device-media';
+    const { error } = await supabase.storage.from(bucket).upload(filename, buffer, {
+      contentType: file.type || 'application/octet-stream',
+      upsert: false,
+    });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const filepath = path.join(uploadDir, filename);
-    await writeFile(filepath, buffer);
-
-    // Return the URL path to the file
-    return NextResponse.json({ url: `/uploads/${filename}` });
+    const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(filename);
+    return NextResponse.json({ url: publicUrlData.publicUrl });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Failed to upload file." }, { status: 500 });

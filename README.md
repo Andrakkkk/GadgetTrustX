@@ -44,8 +44,9 @@ Pengguna dapat melakukan tukar tambah device lama dengan device baru.
 * React.js
 * Tailwind CSS
 * JavaScript
-* Prisma ORM
-* MySQL / PostgreSQL
+* Supabase Auth
+* Supabase Postgres
+* Supabase Storage
 * Vercel (Deployment)
 * GitHub (Version Control)
 
@@ -71,6 +72,27 @@ npm run dev
 http://localhost:3000
 ```
 
+### Konfigurasi Supabase
+
+1. Buat project Supabase.
+2. Jalankan SQL pada `supabase/schema.sql`.
+3. Salin `.env.example` menjadi `.env.local`.
+4. Isi kredensial Supabase di `.env.local`.
+5. Jalankan seed katalog awal:
+
+```bash
+npm run seed:supabase
+```
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_STORAGE_BUCKET=device-media
+```
+
+Status migrasi backend ada di `BACKEND_MIGRATION.md`.
+
 ---
 
 ## Struktur Project
@@ -89,22 +111,9 @@ src/
 
 ---
 
-## Demo Login Accounts
+## Login
 
-### Role Admin
-
-Email: [admin@gmail.com](mailto:admin@gmail.com)
-Password: admin
-
-### Role Buyer
-
-Email: [buyer@gmail.com](mailto:buyer@gmail.com)
-Password: buyer
-
-### Role Seller
-
-Email: [seller@gmail.com](mailto:seller@gmail.com)
-Password: seller
+Login sekarang memakai Supabase Auth. Akun dibuat melalui form register pada halaman login.
 
 ---
 

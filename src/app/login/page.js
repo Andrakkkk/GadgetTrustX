@@ -10,36 +10,44 @@ export default function LoginPage() {
   const [role, setRole] = useState('buyer');
   const [error, setError] = useState('');
   const [isRegister, setIsRegister] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, register } = useAuth();
   const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!email || !password || (isRegister && !name)) {
       setError('Please fill in all required fields.');
       return;
     }
-    
-    let result;
-    if (isRegister) {
-      result = register(role, email, password, name);
-    } else {
-      result = login(role, email, password);
-    }
+    setIsSubmitting(true);
 
-    if (!result.success) {
-      setError(result.message);
-      return;
+    try {
+      let result;
+      if (isRegister) {
+        result = await register(role, email, password, name);
+      } else {
+        result = await login(role, email, password);
+      }
+
+      if (!result.success) {
+        setError(result.message);
+        return;
+      }
+
+      if (result.user.role === 'admin') router.push('/admin');
+      else if (result.user.role === 'seller') router.push('/seller-profile');
+      else router.push('/buyer-profile');
+    } catch (submitError) {
+      setError(submitError.message || 'Login gagal. Coba lagi.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    if (role === 'admin') router.push('/admin');
-    else if (role === 'seller') router.push('/seller-profile');
-    else router.push('/buyer-profile');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center pt-32 pb-12 p-4 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
@@ -86,7 +94,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-slate-300">Role (Simulation)</label>
+            <label className="block text-sm font-medium mb-2 text-slate-300">Role</label>
             <select 
               className="input-field appearance-none"
               value={role}
@@ -94,12 +102,11 @@ export default function LoginPage() {
             >
               <option value="buyer">Buyer</option>
               <option value="seller">Seller</option>
-              <option value="admin">Admin</option>
             </select>
           </div>
 
-          <button type="submit" className="btn-primary w-full">
-            {isRegister ? 'Register' : 'Sign In'}
+          <button type="submit" disabled={isSubmitting} className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
+            {isSubmitting ? 'Processing...' : isRegister ? 'Register' : 'Sign In'}
           </button>
         </form>
 
@@ -117,7 +124,7 @@ export default function LoginPage() {
           >
             {isRegister ? 'Already have an account? Sign In' : "Don't have an account? Register"}
           </button>
-          <p>This is a simulated login for testing the platform roles.</p>
+          <p>Akun sekarang memakai Supabase Auth.</p>
         </div>
       </div>
     </div>

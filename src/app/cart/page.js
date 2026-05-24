@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import AuthGuard from '@/components/AuthGuard';
 import { formatPrice } from '@/utils/formatPrice';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api-client';
 
 export default function CartPage() {
   const { user } = useAuth();
@@ -12,94 +13,87 @@ export default function CartPage() {
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('gadgetTrustX_cart');
-    if (saved) {
-      setCartItems(JSON.parse(saved));
+    if (user) {
+      apiFetch('/api/cart')
+        .then((res) => res.json())
+        .then((data) => setCartItems((data.items || []).map((item) => ({ ...item, selected: true }))))
+        .catch((error) => console.error('Failed to load cart', error));
     }
-  }, []);
+  }, [user]);
 
-  const handleRemove = (index) => {
-    const newCart = [...cartItems];
-    newCart.splice(index, 1);
-    setCartItems(newCart);
-    localStorage.setItem('gadgetTrustX_cart', JSON.stringify(newCart));
+  const handleRemove = async (index) => {
+    const item = cartItems[index];
+    const res = await apiFetch('/api/cart', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cartItemId: item.cartItemId }),
+    });
+    const data = await res.json();
+    setCartItems((data.items || []).map((cartItem) => ({ ...cartItem, selected: true })));
     window.dispatchEvent(new Event('cartUpdated'));
   };
 
-  const handleQuantityChange = (index, delta) => {
-    const newCart = [...cartItems];
-    const item = newCart[index];
+  const handleQuantityChange = async (index, delta) => {
+    const item = cartItems[index];
     const newQty = (item.cartQty || 1) + delta;
-    
-    if (newQty <= 0) {
-      handleRemove(index);
+    if (newQty <= 0) { handleRemove(index); return; }
+    if (newQty > item.stock) { alert(`Only ${item.stock} in stock!`); return; }
+    const res = await apiFetch('/api/cart', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cartItemId: item.cartItemId, quantity: newQty }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || 'Unable to update quantity.');
       return;
     }
-    if (newQty > item.stock) {
-      alert(`Sorry, the seller only has ${item.stock} in stock!`);
-      return;
-    }
-    
-    item.cartQty = newQty;
-    setCartItems(newCart);
-    localStorage.setItem('gadgetTrustX_cart', JSON.stringify(newCart));
+    setCartItems((data.items || []).map((cartItem) => ({ ...cartItem, selected: true })));
     window.dispatchEvent(new Event('cartUpdated'));
   };
+
+  const toggleSelect = (index) => {
+    const newCart = [...cartItems];
+    newCart[index].selected = !newCart[index].selected;
+    setCartItems(newCart);
+  };
+
+  const selectedItems = cartItems.filter(item => item.selected);
+  const total = selectedItems.reduce((sum, item) => sum + (item.price * (item.cartQty || 1)), 0);
 
   const handleCheckout = () => {
     setCheckingOut(true);
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      // 1. Process Orders (Save to Order History)
-      const savedOrders = localStorage.getItem('gadgetTrustX_orders');
-      let orders = savedOrders ? JSON.parse(savedOrders) : [];
-      
-      const newOrder = {
-        id: 'ORD-' + Date.now(),
-        buyerEmail: user.email,
-        date: new Date().toLocaleDateString(),
-        items: cartItems,
-        total: cartItems.reduce((sum, item) => sum + (item.price * (item.cartQty || 1)), 0),
-        status: 'Processing'
-      };
-      
-      orders.unshift(newOrder);
-      localStorage.setItem('gadgetTrustX_orders', JSON.stringify(orders));
-
-      // 2. Decrease Stock in Global Inventory
-      const savedDevices = localStorage.getItem('gadgetTrustX_devices');
-      if (savedDevices) {
-        let devices = JSON.parse(savedDevices);
-        cartItems.forEach(cartItem => {
-          const deviceIndex = devices.findIndex(d => d.id === cartItem.id);
-          const qty = cartItem.cartQty || 1;
-          if (deviceIndex !== -1 && devices[deviceIndex].stock >= qty) {
-            devices[deviceIndex].stock -= qty;
-          }
-        });
-        localStorage.setItem('gadgetTrustX_devices', JSON.stringify(devices));
+    setTimeout(async () => {
+      const res = await apiFetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cartItemIds: selectedItems.map((item) => item.cartItemId) }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Checkout failed.');
+        setCheckingOut(false);
+        return;
       }
 
-      // 3. Clear Cart
-      setCartItems([]);
-      localStorage.removeItem('gadgetTrustX_cart');
+      const cartRes = await apiFetch('/api/cart');
+      const cartData = await cartRes.json();
+      setCartItems((cartData.items || []).map((cartItem) => ({ ...cartItem, selected: true })));
       window.dispatchEvent(new Event('cartUpdated'));
-      
       setCheckingOut(false);
       setCheckoutSuccess(true);
     }, 2000);
   };
 
-  const total = cartItems.reduce((sum, item) => sum + (item.price * (item.cartQty || 1)), 0);
-  const totalItemsCount = cartItems.reduce((sum, item) => sum + (item.cartQty || 1), 0);
+
 
   if (user?.role !== 'buyer') {
     return (
       <AuthGuard>
-        <div className="flex justify-center items-center h-96">
-          <div className="glass-panel p-8 text-center">
-            <p className="text-xl text-white">Only Buyers have a shopping cart.</p>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="glass-panel p-10 text-center max-w-md">
+            <h3 className="text-xl font-bold text-white mb-2">Access Restricted</h3>
+            <p className="text-slate-500 mb-0">Only Buyers can access the shopping cart features.</p>
           </div>
         </div>
       </AuthGuard>
@@ -109,14 +103,14 @@ export default function CartPage() {
   if (checkoutSuccess) {
     return (
       <AuthGuard>
-        <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-          <div className="glass-panel p-12 flex flex-col items-center">
-            <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-6">
-              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="glass-panel p-12 text-center max-w-lg w-full animate-fade-in">
+            <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 border border-emerald-500/20">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
             </div>
-            <h2 className="text-3xl font-bold text-white mb-2">Payment Successful!</h2>
-            <p className="text-slate-400 mb-8">Your order has been placed and is being processed by the sellers.</p>
-            <Link href="/buyer-profile" className="btn-primary px-8 py-3">View Order History</Link>
+            <h2 className="text-4xl font-black text-white mb-2 uppercase tracking-tighter">Order Confirmed</h2>
+            <p className="text-slate-500 mb-10 font-medium">Your payment was successful and the seller has been notified.</p>
+            <Link href="/buyer-profile" className="btn-primary !px-12">View My Orders</Link>
           </div>
         </div>
       </AuthGuard>
@@ -125,88 +119,89 @@ export default function CartPage() {
 
   return (
     <AuthGuard>
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-white mb-8">Your Shopping Cart</h1>
-        
-        {cartItems.length === 0 ? (
-          <div className="glass-panel p-16 text-center">
-            <svg className="w-20 h-20 mx-auto text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            <h2 className="text-2xl font-medium text-slate-300 mb-2">Your cart is empty</h2>
-            <p className="text-slate-400 mb-8">Looks like you haven't added any devices to your cart yet.</p>
-            <Link href="/marketplace" className="btn-primary px-8">Browse Marketplace</Link>
+      <div className="min-h-screen pb-20 pt-32">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="mb-12">
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase">Shopping <span className="text-blue-500">Cart</span></h1>
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-2">{cartItems.length} items total • {selectedItems.length} selected</p>
           </div>
-        ) : (
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="flex-grow space-y-4">
-              {cartItems.map((item, index) => (
-                <div key={index} className="glass-panel p-4 flex items-center gap-4 relative pr-12">
-                  <button 
-                    onClick={() => handleRemove(index)}
-                    className="absolute top-1/2 -translate-y-1/2 right-4 text-slate-500 hover:text-red-400 transition-colors"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                  </button>
-                  <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-lg bg-slate-800" />
-                  <div>
-                    <p className="text-xs text-blue-400 mb-1">{item.brand}{item.condition ? ` • ${item.condition}` : ''}</p>
-                    <h3 className="text-lg font-bold text-white leading-tight mb-1">{item.name}</h3>
-                    <p className="text-emerald-400 font-bold">{formatPrice(item.price)}</p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="flex items-center border border-slate-700 rounded-lg w-max bg-slate-900/50">
-                        <button onClick={() => handleQuantityChange(index, -1)} className="px-3 py-1 text-slate-400 hover:text-white transition-colors">-</button>
-                        <span className="px-3 py-1 text-sm text-white font-medium min-w-[2rem] text-center">{item.cartQty || 1}</span>
-                        <button onClick={() => handleQuantityChange(index, 1)} className="px-3 py-1 text-slate-400 hover:text-white transition-colors">+</button>
+
+          {cartItems.length === 0 ? (
+            <div className="glass-panel p-20 text-center animate-fade-in">
+              <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-8 border border-slate-800">
+                <svg className="w-10 h-10 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2">Cart is Empty</h3>
+              <p className="text-slate-500 mb-10">Your next favorite gadget is waiting in the marketplace.</p>
+              <Link href="/marketplace" className="btn-primary !px-10">Start Shopping</Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-fade-in">
+              <div className="lg:col-span-8 space-y-6">
+                {cartItems.map((item, index) => (
+                  <div key={index} className={`glass-panel p-6 flex flex-col sm:flex-row items-center gap-8 relative group transition-all ${item.selected ? 'border-blue-500/30' : 'opacity-60 border-transparent grayscale-[0.5]'}`}>
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => toggleSelect(index)}
+                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${item.selected ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/20' : 'border-white/10 hover:border-white/30'}`}
+                      >
+                        {item.selected && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                      </button>
+                    </div>
+                    <button onClick={() => handleRemove(index)} className="absolute top-6 right-6 p-2 rounded-xl bg-slate-900 text-slate-500 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                    <img src={item.image} alt={item.name} className="w-32 h-32 object-cover rounded-2xl bg-slate-900 shadow-2xl" />
+                    <div className="flex-grow">
+                      <p className="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-1">{item.brand}</p>
+                      <h3 className="text-xl font-bold text-white mb-2">{item.name}</h3>
+                      <p className="text-lg font-black text-white mb-4">{formatPrice(item.price)}</p>
+                      <div className="flex items-center gap-6">
+                        <div className="flex items-center bg-slate-900 rounded-xl p-1 border border-white/5">
+                          <button onClick={() => handleQuantityChange(index, -1)} className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-white transition-all">-</button>
+                          <span className="w-10 text-center text-xs font-black text-white">{item.cartQty || 1}</span>
+                          <button onClick={() => handleQuantityChange(index, 1)} className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-white transition-all">+</button>
+                        </div>
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Seller: <span className="text-slate-300">{item.seller?.name || 'Unknown Seller'}</span></p>
                       </div>
-                      <p className="text-xs text-slate-500">Sold by: {item.seller.name}</p>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="w-full lg:w-96 flex-shrink-0">
-              <div className="glass-panel p-6 sticky top-24">
-                <h2 className="text-xl font-bold text-white mb-6 border-b border-slate-700 pb-4">Order Summary</h2>
-                
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-slate-300">
-                    <span>Subtotal ({totalItemsCount} items)</span>
-                    <span>{formatPrice(total)}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-300">
-                    <span>TrustX Protection Fee</span>
-                    <span className="text-emerald-400">Free</span>
-                  </div>
-                  <div className="flex justify-between text-slate-300 border-b border-slate-700 pb-4">
-                    <span>Shipping</span>
-                    <span className="text-emerald-400">Free</span>
-                  </div>
-                  <div className="flex justify-between text-white font-bold text-xl pt-2">
-                    <span>Total</span>
-                    <span className="text-emerald-400">{formatPrice(total)}</span>
-                  </div>
-                </div>
+                ))}
+              </div>
 
-                <button 
-                  onClick={handleCheckout}
-                  disabled={checkingOut}
-                  className="btn-primary w-full py-4 text-lg font-bold flex justify-center items-center"
-                >
-                  {checkingOut ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                      Processing...
-                    </>
-                  ) : 'Proceed to Checkout'}
-                </button>
-                <div className="mt-4 flex items-center justify-center text-xs text-slate-500">
-                  <svg className="w-4 h-4 mr-1 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                  Secure SSL Encryption
+              <div className="lg:col-span-4">
+                <div className="glass-panel p-8 sticky top-24">
+                  <h3 className="text-xl font-black text-white mb-8 border-b border-white/5 pb-4 uppercase tracking-tighter">Summary</h3>
+                  <div className="space-y-4 mb-10">
+                    <div className="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-widest">
+                      <span>Subtotal</span>
+                      <span className="text-white">{formatPrice(total)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-widest">
+                      <span>Tax (VAT)</span>
+                      <span className="text-emerald-400">0.00</span>
+                    </div>
+                    <div className="flex justify-between pt-6 border-t border-white/5">
+                      <span className="text-sm font-black text-white uppercase tracking-widest">Total</span>
+                      <span className="text-xl font-black text-emerald-400">{formatPrice(total)}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleCheckout}
+                    disabled={checkingOut || selectedItems.length === 0}
+                    className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex justify-center items-center transition-all ${checkingOut || selectedItems.length === 0 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'btn-primary shadow-2xl shadow-blue-500/20'}`}
+                  >
+                    {checkingOut ? 'Authenticating...' : `Checkout (${selectedItems.length})`}
+                  </button>
+                  <p className="text-[10px] text-slate-600 font-medium text-center mt-6 flex items-center justify-center gap-2">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    Secure Checkout via TrustX Engine
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </AuthGuard>
   );
