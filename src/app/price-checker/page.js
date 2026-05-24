@@ -24,7 +24,7 @@ export default function PriceCheckerPage() {
     setAnalyzing(true);
     setResult(null);
 
-    const apiKeys = ["AIzaSyDCxSClY47XG1Xi4ftz66uMVq3uFs-nQUw", "AIzaSyDNGeK7XxyBL-UgWhnLhDccr4eJ2-dD8JI", "AIzaSyCpJrDjkokHP2laePeAfYmyR6bccF7M2vw", "AIzaSyClj4Idpqy504T5FO3ikL2LYzTCoi8a9C0", "AIzaSyBhq657k381AkMCFPudEHs121S55aHcoggE", "AIzaSyB1pK9nFcR2sE2DQcs8eLuK28rH07-Aqc4", "AIzaSyCo_-MbEQp4AzWrmjkaBUVa9J9Oyc_Hhjs"];
+    const apiKeys = [""];
     // Shuffle keys to distribute load
     const shuffledKeys = [...apiKeys].sort(() => 0.5 - Math.random());
 
