@@ -8,6 +8,10 @@ import { apiFetch } from '@/lib/api-client';
 
 export default function SellerProfilePage() {
   const { user, isLoading, updateProfile } = useAuth();
+  const sellerEmail = user?.email || '';
+  const sellerName = user?.name || 'Seller';
+  const sellerStoreName = user?.storeName || sellerName;
+  const sellerAvatar = user?.avatar || '';
   const [devices, setDevices] = useState([]);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [wtbList, setWtbList] = useState([]);
@@ -37,7 +41,7 @@ export default function SellerProfilePage() {
         bio: user.bio || '',
         storeName: user.storeName || user.name || ''
       });
-      if (user.avatar) setAvatarPreview(user.avatar);
+      if (user?.avatar) setAvatarPreview(user.avatar);
     }
   }, [user]);
 
@@ -51,8 +55,9 @@ export default function SellerProfilePage() {
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
+    if (!user) return;
     setSavingProfile(true);
-    let avatarUrl = user.avatar || null;
+    let avatarUrl = user?.avatar || null;
     const fileInput = e.target.elements.avatarFile;
     if (fileInput && fileInput.files[0]) {
       const fd = new FormData();
@@ -74,7 +79,7 @@ export default function SellerProfilePage() {
 
   const handleSendOffer = async (e) => {
     e.preventDefault();
-    if (!offerModal) return;
+    if (!offerModal || !user) return;
     setSendingOffer(true);
 
     let imageUrl = null;
@@ -97,8 +102,8 @@ export default function SellerProfilePage() {
       storage: offerForm.storage,
       description: offerForm.description,
       image: imageUrl,
-      sellerName: user.name,
-      sellerEmail: user.email
+      sellerName,
+      sellerEmail
     };
     const res = await apiFetch('/api/chats', {
       method: 'POST',
@@ -137,21 +142,22 @@ export default function SellerProfilePage() {
       .then((data) => setWtbList(data.listings || []))
       .catch((error) => console.error('Failed to load WTB listings', error));
 
-    if (user) {
+    if (sellerEmail) {
       apiFetch('/api/orders')
         .then((res) => res.json())
         .then((data) => setAllOrders(data.orders || []))
         .catch((error) => console.error('Failed to load seller orders', error));
 
-      fetch(`/api/reviews?sellerEmail=${encodeURIComponent(user.email)}`)
+      fetch(`/api/reviews?sellerEmail=${encodeURIComponent(sellerEmail)}`)
         .then((res) => res.json())
         .then((data) => setAllReviews(data.reviews || []))
         .catch((error) => console.error('Failed to load seller reviews', error));
     }
-  }, [user]);
+  }, [sellerEmail]);
 
   const handleAddDevice = async (e) => {
     e.preventDefault();
+    if (!user) return;
     let imageUrl = null;
     const fileInput = e.target.elements.imageFile;
     if (fileInput && fileInput.files[0]) {
@@ -192,7 +198,7 @@ export default function SellerProfilePage() {
         price: parseInt(formData.price),
         stock: parseInt(formData.stock) || 1,
         image: imageUrl || 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&q=80&w=800',
-        sellerEmail: user.email,
+        sellerEmail,
         verifiedByTrustX: false,
       };
       const res = await apiFetch('/api/devices', {
@@ -227,25 +233,25 @@ export default function SellerProfilePage() {
     setDevices(updatedDevices);
   };
 
-  const myListings = devices.filter(d => d.seller?.id === user?.email);
+  const myListings = devices.filter(d => d.seller?.id === sellerEmail);
 
   const sellerOrders = useMemo(() => allOrders.filter(order =>
-    order.items?.some(item => item.seller?.id === user?.email)
-  ), [allOrders, user]);
+    order.items?.some(item => item.seller?.id === sellerEmail)
+  ), [allOrders, sellerEmail]);
 
-  const sellerReviews = useMemo(() => allReviews.filter(r => r.sellerEmail === user?.email), [allReviews, user]);
+  const sellerReviews = useMemo(() => allReviews.filter(r => r.sellerEmail === sellerEmail), [allReviews, sellerEmail]);
 
   const monthlySales = useMemo(() => {
     const now = new Date(); const m = now.getMonth(); const y = now.getFullYear();
     return sellerOrders.reduce((sum, order) => {
       const d = new Date(order.date);
       if (d.getMonth() === m && d.getFullYear() === y) {
-        return sum + order.items.filter(i => i.seller?.id === user?.email)
-          .reduce((s, i) => s + (i.price * (i.cartQty || 1)), 0);
+          return sum + (order.items || []).filter(i => i?.seller?.id === sellerEmail)
+            .reduce((s, i) => s + (i.price * (i.cartQty || 1)), 0);
       }
       return sum;
     }, 0);
-  }, [sellerOrders, user]);
+  }, [sellerOrders, sellerEmail]);
 
   const trustScore = useMemo(() => {
     if (!sellerReviews.length) return null;
@@ -300,11 +306,11 @@ export default function SellerProfilePage() {
               <div className="glass-panel p-6 flex flex-col items-center text-center">
                 <div className="relative mb-4">
                   <div className="w-24 h-24 rounded-3xl overflow-hidden ring-4 ring-white/5 shadow-2xl">
-                    {user.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    {sellerAvatar ? (
+                      <img src={sellerAvatar} alt={sellerName} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-2xl font-black text-white">
-                        {(user.name || '?').charAt(0)}
+                        {sellerName.charAt(0)}
                       </div>
                     )}
                   </div>
@@ -312,8 +318,8 @@ export default function SellerProfilePage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                   </div>
                 </div>
-                <h2 className="text-xl font-bold text-white mb-1">{user.storeName || user.name}</h2>
-                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{user.email}</p>
+                <h2 className="text-xl font-bold text-white mb-1">{sellerStoreName}</h2>
+                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{sellerEmail}</p>
                 
                 <div className="flex gap-2 mt-4">
                    <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-black text-blue-400 uppercase tracking-tighter">Pro Seller</div>
@@ -522,8 +528,8 @@ export default function SellerProfilePage() {
                           </div>
                           
                           <div className="space-y-3">
-                            {order.items
-                              .filter(item => item.seller?.id === user?.email)
+                            {(order.items || [])
+                              .filter(item => item.seller?.id === sellerEmail)
                               .map((item, idx) => (
                                 <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/50 border border-white/5">
                                   <div className="flex items-center gap-4">
