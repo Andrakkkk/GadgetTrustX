@@ -46,7 +46,24 @@ export async function GET(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ chats: data.map(mapChatRow) });
+  const mappedChats = data.map(mapChatRow);
+
+  mappedChats.sort((a, b) => {
+    const lastA = a.messages && a.messages.length > 0 ? a.messages[a.messages.length - 1] : null;
+    const lastB = b.messages && b.messages.length > 0 ? b.messages[b.messages.length - 1] : null;
+
+    const timeA = lastA?.createdAt
+      ? new Date(lastA.createdAt).getTime()
+      : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+
+    const timeB = lastB?.createdAt
+      ? new Date(lastB.createdAt).getTime()
+      : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+
+    return timeB - timeA;
+  });
+
+  return NextResponse.json({ chats: mappedChats });
 }
 
 export async function POST(request) {

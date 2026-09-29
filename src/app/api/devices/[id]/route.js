@@ -17,6 +17,7 @@ const deviceSelect = `
   chipset,
   description,
   image,
+  location,
   verified_by_trustx,
   is_trade_in,
   is_custom_offer,
@@ -26,6 +27,7 @@ const deviceSelect = `
     email,
     name,
     store_name,
+    address,
     is_verified,
     badges
   )
@@ -93,6 +95,7 @@ export async function PATCH(request, { params }) {
       chipset: body.chipset,
       description: body.description,
       image: body.image,
+      location: body.location,
       verified_by_trustx: body.verifiedByTrustX,
       is_trade_in: body.isTradeIn,
       is_custom_offer: body.isCustomOffer,

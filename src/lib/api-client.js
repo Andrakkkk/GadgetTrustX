@@ -7,15 +7,11 @@ export async function apiFetch(path, options = {}) {
   let session = null;
 
   if (supabase) {
-    ({
-      data: { session },
-    } = await supabase.auth.getSession());
-
-    if (!session?.access_token) {
-      const {
-        data: { session: refreshedSession },
-      } = await supabase.auth.refreshSession();
-      session = refreshedSession;
+    try {
+      const { data } = await supabase.auth.getSession();
+      session = data?.session || null;
+    } catch {
+      session = null;
     }
   }
 
@@ -24,8 +20,17 @@ export async function apiFetch(path, options = {}) {
     headers.set('Authorization', `Bearer ${session.access_token}`);
   }
 
-  return fetch(path, {
-    ...options,
-    headers,
-  });
+  try {
+    return await fetch(path, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    console.warn(`[apiFetch] Network error requesting ${path}:`, error?.message || error);
+    return new Response(JSON.stringify({ error: 'Network error or server unreachable' }), {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

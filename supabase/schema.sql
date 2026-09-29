@@ -138,6 +138,36 @@ create table if not exists public.chat_messages (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.trade_in_requests (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references public.orders(id) on delete set null,
+  device_id text references public.devices(id) on delete set null,
+  buyer_id uuid not null references public.profiles(id) on delete cascade,
+  seller_id uuid references public.profiles(id) on delete set null,
+  old_device_name text not null,
+  old_device_brand text,
+  old_device_condition text not null,
+  old_device_storage text,
+  old_device_ram text,
+  old_device_battery_health integer,
+  old_device_accessories text,
+  old_device_description text,
+  old_device_images text[] not null default '{}',
+  ai_estimated_value integer not null default 0,
+  final_trade_in_value integer not null default 0,
+  status text not null default 'pending',
+  rejection_reason text,
+  old_device_waybill text,
+  old_device_courier text,
+  old_device_received boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.orders
+  add column if not exists trade_in_id uuid references public.trade_in_requests(id) on delete set null,
+  add column if not exists trade_in_discount integer not null default 0;
+
 alter table public.profiles enable row level security;
 alter table public.devices enable row level security;
 alter table public.reviews enable row level security;
@@ -147,6 +177,16 @@ alter table public.order_items enable row level security;
 alter table public.wtb_listings enable row level security;
 alter table public.chats enable row level security;
 alter table public.chat_messages enable row level security;
+alter table public.trade_in_requests enable row level security;
+
+create policy "trade_in_participants_read" on public.trade_in_requests
+for select using (buyer_id = auth.uid() or seller_id = auth.uid());
+
+create policy "buyers_create_trade_in" on public.trade_in_requests
+for insert with check (buyer_id = auth.uid());
+
+create policy "participants_update_trade_in" on public.trade_in_requests
+for update using (buyer_id = auth.uid() or seller_id = auth.uid());
 
 create policy "profiles are readable" on public.profiles
 for select using (true);

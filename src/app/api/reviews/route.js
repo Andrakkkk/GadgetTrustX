@@ -10,6 +10,9 @@ const reviewSelect = `
   rating,
   comment,
   image,
+  seller_response,
+  seller_response_date,
+  seller_response_image,
   order_id,
   order_item_id,
   created_at,
@@ -58,6 +61,20 @@ export async function POST(request) {
   }
 
   const body = await request.json();
+
+  // GUARD: Prevent duplicate reviews for same order_item_id
+  if (body.orderItemId) {
+    const { data: existingReview } = await result.supabase
+      .from('reviews')
+      .select('id')
+      .eq('buyer_id', result.profile.id)
+      .eq('order_item_id', body.orderItemId)
+      .maybeSingle();
+    if (existingReview) {
+      return NextResponse.json({ error: 'Anda sudah memberikan ulasan untuk produk ini.' }, { status: 409 });
+    }
+  }
+
   const { data: seller } = await result.supabase
     .from('profiles')
     .select('id')
@@ -114,4 +131,85 @@ export async function POST(request) {
   }
 
   return NextResponse.json({ review: mapReviewRow(data) }, { status: 201 });
+}
+
+export async function PATCH(request) {
+  const result = await getRequestUser(request);
+  if (result.error) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  const body = await request.json();
+  if (!body.reviewId || (!body.sellerResponse && !body.sellerResponseImage)) {
+    return NextResponse.json({ error: 'Review ID and sellerResponse are required.' }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+  const { data: existingReview, error: fetchErr } = await admin
+    .from('reviews')
+    .select('id, seller_id, device_id')
+    .eq('id', body.reviewId)
+    .single();
+
+  if (fetchErr || !existingReview) {
+    return NextResponse.json({ error: 'Review not found.' }, { status: 404 });
+  }
+
+  // Obtain actual seller_id from review row or fallback to target device's seller_id
+  let actualSellerId = existingReview.seller_id;
+  if (!actualSellerId && existingReview.device_id) {
+    const { data: targetDevice } = await admin
+      .from('devices')
+      .select('seller_id')
+      .eq('id', existingReview.device_id)
+      .single();
+    if (targetDevice) actualSellerId = targetDevice.seller_id;
+  }
+
+  if (result.profile.role !== 'admin' && (!actualSellerId || actualSellerId !== result.profile.id)) {
+    return NextResponse.json({ error: 'Forbidden: Hanya penjual pemilik produk ini yang dapat membalas ulasan.' }, { status: 403 });
+  }
+
+  const updateFields = {
+    seller_response: body.sellerResponse || '',
+    seller_response_date: new Date().toISOString(),
+  };
+  if (body.sellerResponseImage) {
+    updateFields.seller_response_image = body.sellerResponseImage;
+  }
+
+  let { data, error } = await admin
+    .from('reviews')
+    .update(updateFields)
+    .eq('id', body.reviewId)
+    .select(reviewSelect)
+    .single();
+
+  if (error) {
+    // Fallback if seller_response_image column isn't created yet in DB
+    const { data: existing, error: getErr } = await admin
+      .from('reviews')
+      .select('comment')
+      .eq('id', body.reviewId)
+      .single();
+
+    if (!getErr && existing) {
+      const baseComment = (existing.comment || '').split(/\[Respon Penjual\]:/)[0].trim();
+      const updatedComment = `${baseComment}\n\n[Respon Penjual]: ${body.sellerResponse || ''}`;
+
+      const { data: fallbackData } = await admin
+        .from('reviews')
+        .update({ comment: updatedComment })
+        .eq('id', body.reviewId)
+        .select(reviewSelect)
+        .single();
+
+      if (fallbackData) {
+        return NextResponse.json({ review: mapReviewRow(fallbackData) });
+      }
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ review: mapReviewRow(data) });
 }

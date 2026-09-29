@@ -16,12 +16,23 @@ export async function POST(request) {
       return NextResponse.json({ error: "No file received." }, { status: 400 });
     }
 
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "Invalid file type. Only JPEG, PNG, WEBP, and GIF images are allowed." }, { status: 400 });
+    }
+
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json({ error: "File size exceeds 5MB limit." }, { status: 400 });
+    }
+
     const supabase = createAdminClient();
     const buffer = Buffer.from(await file.arrayBuffer());
     const filename = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'device-media';
     const { error } = await supabase.storage.from(bucket).upload(filename, buffer, {
-      contentType: file.type || 'application/octet-stream',
+      contentType: file.type,
       upsert: false,
     });
 

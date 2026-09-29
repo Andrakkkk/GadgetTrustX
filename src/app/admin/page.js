@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import AuthGuard from '@/components/AuthGuard';
 import { formatPrice } from '@/utils/formatPrice';
 import { apiFetch } from '@/lib/api-client';
+import OrderDetailModal from '@/components/OrderDetailModal';
 
 export default function AdminPage() {
     const { user, isLoading } = useAuth();
@@ -17,6 +18,7 @@ export default function AdminPage() {
     // Modals state
     const [editingProduct, setEditingProduct] = useState(null);
     const [editingUser, setEditingUser] = useState(null);
+    const [orderDetailModal, setOrderDetailModal] = useState({ isOpen: false, order: null });
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, orderId: null, itemId: null, action: null });
 
     const loadData = async () => {
@@ -47,7 +49,10 @@ export default function AdminPage() {
 
     useEffect(() => {
         if (user?.role === 'admin') {
-            loadData();
+            const timer = setTimeout(() => {
+                loadData();
+            }, 0);
+            return () => clearTimeout(timer);
         }
     }, [user]);
 
@@ -60,7 +65,7 @@ export default function AdminPage() {
         });
         const data = await response.json();
         if (!response.ok) {
-            alert(data.error || 'Failed to update order.');
+            alert(data.error || 'Gagal memperbarui pesanan.');
             return;
         }
         setAllOrders((items) => items.map((order) => order.id === orderId ? data.order : order));
@@ -77,18 +82,18 @@ export default function AdminPage() {
         });
         const data = await response.json();
         if (!response.ok) {
-            alert(data.error || 'Failed to update return request.');
+            alert(data.error || 'Gagal memperbarui request return.');
             return;
         }
 
         await loadData();
         setConfirmModal({ isOpen: false, orderId: null, itemId: null, itemIndex: null, action: null });
-        alert(`Return request ${action}d successfully.`);
+        alert(`Request return berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}.`);
     };
 
     // --- Products Logic ---
     const handleDeleteProduct = async (productId) => {
-        if (!confirm('Are you sure you want to delete this product?')) return;
+        if (!confirm('Yakin ingin menghapus produk ini?')) return;
         await apiFetch(`/api/devices/${productId}`, { method: 'DELETE' });
         const updated = allProducts.filter(p => p.id !== productId);
         setAllProducts(updated);
@@ -126,7 +131,7 @@ export default function AdminPage() {
 
     // --- Users Logic ---
     const handleDeleteUser = async (userId) => {
-        if (!confirm('Are you sure you want to delete this user?')) return;
+        if (!confirm('Yakin ingin menghapus user ini?')) return;
         const response = await apiFetch('/api/admin/users', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
@@ -148,7 +153,7 @@ export default function AdminPage() {
             });
             const data = await response.json();
             if (!response.ok) {
-                alert(data.error || 'Failed to create user.');
+            alert(data.error || 'Gagal membuat user.');
                 return;
             }
             setAllUsers((items) => [...items, data.user]);
@@ -160,7 +165,7 @@ export default function AdminPage() {
             });
             const data = await response.json();
             if (!response.ok) {
-                alert(data.error || 'Failed to save user.');
+                alert(data.error || 'Gagal menyimpan user.');
                 return;
             }
             setAllUsers((items) => items.map((item) => item.id === editingUser.id ? data.user : item));
@@ -195,7 +200,7 @@ export default function AdminPage() {
         });
         const data = await response.json();
         if (!response.ok) {
-            alert(data.error || 'Failed to update badge.');
+            alert(data.error || 'Gagal memperbarui badge.');
             return;
         }
         setAllUsers((items) => items.map((item) => item.id === userId ? data.user : item));
@@ -206,7 +211,7 @@ export default function AdminPage() {
             <AuthGuard>
                 <div className="flex justify-center items-center h-96">
                     <div className="glass-panel p-8 text-center">
-                        <p className="text-xl text-white">Access Denied. Admin privileges required.</p>
+                        <p className="text-xl text-white">Akses ditolak. Hak admin diperlukan.</p>
                     </div>
                 </div>
             </AuthGuard>
@@ -236,13 +241,13 @@ export default function AdminPage() {
                         onClick={() => setActiveTab('products')}
                         className={`px-6 py-3 font-bold text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'products' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                     >
-                        Products ({allProducts.length})
+                        Produk ({allProducts.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('users')}
                         className={`px-6 py-3 font-bold text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'users' ? 'border-purple-500 text-purple-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                     >
-                        Users ({allUsers.length})
+                        User ({allUsers.length})
                     </button>
                 </div>
 
@@ -251,24 +256,24 @@ export default function AdminPage() {
                     <div className="animate-fade-in">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             <div className="glass-panel p-6 border-l-4 border-blue-500">
-                                <p className="text-slate-400 text-sm mb-1">Total Users</p>
+                                <p className="text-slate-400 text-sm mb-1">Total User</p>
                                 <p className="text-3xl font-bold text-white">{allUsers.length}</p>
                             </div>
                             <div className="glass-panel p-6 border-l-4 border-emerald-500">
-                                <p className="text-slate-400 text-sm mb-1">Active Listings</p>
+                                <p className="text-slate-400 text-sm mb-1">Listing Aktif</p>
                                 <p className="text-3xl font-bold text-white">{allProducts.length}</p>
                             </div>
                             <div className="glass-panel p-6 border-l-4 border-amber-500">
-                                <p className="text-slate-400 text-sm mb-1">Pending Returns</p>
+                                <p className="text-slate-400 text-sm mb-1">Return Diproses</p>
                                 <p className="text-3xl font-bold text-white">{returnRequests.length}</p>
                             </div>
                         </div>
 
                         <div className="glass-panel p-8">
                             <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-700/50">
-                                <h2 className="text-xl font-black text-white uppercase tracking-tighter">Pending Return Requests</h2>
+                                <h2 className="text-xl font-black text-white uppercase tracking-tighter">Request Return Diproses</h2>
                                 <span className="px-3 py-1 bg-amber-500/10 text-amber-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-500/20 animate-pulse">
-                                    Action Required
+                                    Perlu Tindakan
                                 </span>
                             </div>
 
@@ -277,7 +282,7 @@ export default function AdminPage() {
                                     <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-800">
                                         <svg className="w-8 h-8 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
-                                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">No pending requests</p>
+                                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Tidak ada request diproses</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -286,27 +291,30 @@ export default function AdminPage() {
                                             <div className="p-6 flex-grow">
                                                 <div className="flex gap-4 mb-6">
                                                     <div className="w-16 h-16 rounded-2xl bg-slate-800 overflow-hidden border border-white/5 flex-shrink-0">
-                                                        <img src={req.item.image} className="w-full h-full object-cover" alt="Product" />
+                                                        <img src={req.item.image} className="w-full h-full object-contain p-1.5" alt="Produk" />
                                                     </div>
                                                     <div>
                                                         <h4 className="font-bold text-white text-lg leading-tight mb-1">{req.item.name}</h4>
-                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Order: <span className="text-slate-300">#{req.orderId.slice(-8)}</span></p>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-white text-lg leading-tight mb-1">{req.item.name}</h4>
+                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Pesanan: <span className="text-slate-300">#{req.orderId.slice(-8)}</span></p>
                                                         <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Buyer: <span className="text-blue-400">{req.buyerEmail}</span></p>
                                                     </div>
                                                 </div>
 
                                                 <div className="bg-slate-950/50 p-4 rounded-2xl border border-white/5 mb-6">
-                                                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2">Reason for Return</p>
-                                                    <p className="text-sm text-slate-200 leading-relaxed font-medium">"{req.item.returnReason}"</p>
+                                                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2">Alasan Return</p>
+                                                    <p className="text-sm text-slate-200 leading-relaxed font-medium">&ldquo;{req.item.returnReason}&rdquo;</p>
                                                 </div>
 
                                                 {req.item.returnImage && (
                                                     <div className="mb-6">
-                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3">Evidence Attached</p>
+                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3">Bukti Terlampir</p>
                                                         <div className="relative group/img rounded-2xl overflow-hidden border border-white/5 aspect-video bg-black">
-                                                            <img src={req.item.returnImage} alt="Return proof" className="w-full h-full object-contain" />
+                                                            <img src={req.item.returnImage} alt="Bukti return" className="w-full h-full object-contain" />
                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                                                                <button onClick={() => window.open(req.item.returnImage)} className="p-2 bg-white/10 backdrop-blur-md rounded-xl text-white text-xs font-black uppercase tracking-widest">View Full Size</button>
+                                                                <button onClick={() => window.open(req.item.returnImage)} className="p-2 bg-white/10 backdrop-blur-md rounded-xl text-white text-xs font-black uppercase tracking-widest">Lihat Ukuran Penuh</button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -318,13 +326,13 @@ export default function AdminPage() {
                                                     onClick={() => setConfirmModal({ isOpen: true, orderId: req.orderId, itemIndex: req.itemIndex, action: 'approve' })}
                                                     className="py-4 bg-blue-500/5 text-blue-500 hover:bg-blue-600 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all border-r border-slate-800"
                                                 >
-                                                    Approve Return
+                                                    Setujui Return
                                                 </button>
                                                 <button
                                                     onClick={() => setConfirmModal({ isOpen: true, orderId: req.orderId, itemIndex: req.itemIndex, action: 'reject' })}
                                                     className="py-4 bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all"
                                                 >
-                                                    Reject
+                                                    Tolak
                                                 </button>
                                             </div>
                                         </div>
@@ -338,9 +346,9 @@ export default function AdminPage() {
                 {/* Orders Tab */}
                 {activeTab === 'orders' && (
                     <div className="glass-panel p-6 animate-fade-in">
-                        <h2 className="text-xl font-bold text-white mb-6">Manage Orders</h2>
+                        <h2 className="text-xl font-bold text-white mb-6">Kelola Pesanan</h2>
                         {allOrders.length === 0 ? (
-                            <p className="text-slate-400 text-center">No orders found.</p>
+                            <p className="text-slate-400 text-center">Tidak ada pesanan.</p>
                         ) : (
                             <div className="space-y-4">
                                 {allOrders.map(order => {
@@ -357,7 +365,7 @@ export default function AdminPage() {
                                                     </div>
                                                     <div className="hidden sm:block h-8 w-px bg-slate-700"></div>
                                                     <div>
-                                                        <p className="text-xs text-slate-500">Date</p>
+                                                        <p className="text-xs text-slate-500">Tanggal</p>
                                                         <p className="text-sm text-white">{order.date}</p>
                                                     </div>
                                                     <div className="hidden sm:block h-8 w-px bg-slate-700"></div>
@@ -367,6 +375,12 @@ export default function AdminPage() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => setOrderDetailModal({ isOpen: true, order })}
+                                                        className="px-3 py-1.5 rounded-xl text-xs font-black uppercase bg-blue-500/20 text-blue-300 border border-blue-500/40 hover:bg-blue-500/30 transition-all flex items-center gap-1 cursor-pointer shadow-md shadow-blue-500/10"
+                                                    >
+                                                        📋 Detail Order
+                                                    </button>
                                                     <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
                                                         order.status === 'Completed' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
                                                         order.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
@@ -376,7 +390,7 @@ export default function AdminPage() {
                                                         'bg-slate-700/50 text-slate-400 border-slate-600'
                                                     }`}>{order.status}</span>
                                                     {isLocked ? (
-                                                        <span className="text-xs text-slate-500 italic">Status locked</span>
+                                                        <span className="text-xs text-slate-500 italic">Status terkunci</span>
                                                     ) : (
                                                         <select
                                                             className="bg-slate-900 border border-slate-600 text-white text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500"
@@ -396,22 +410,22 @@ export default function AdminPage() {
                                             <div className="divide-y divide-slate-700/30">
                                                 {order.items?.map((item, idx) => (
                                                     <div key={item.orderItemId || idx} className="flex items-center gap-4 px-5 py-3">
-                                                        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-slate-900 flex-shrink-0" />
+                                                        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-contain bg-slate-900 p-0.5 flex-shrink-0" />
                                                         <div className="flex-grow min-w-0">
                                                             <p className="text-sm text-white font-semibold truncate">{item.name}</p>
                                                             <p className="text-xs text-slate-500">{item.brand} · {formatPrice(item.price)}</p>
                                                         </div>
                                                         <div className="flex-shrink-0">
                                                             {item.returnStatus === 'Pending' ? (
-                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30">↩ Return Pending</span>
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30">↩ Return Diproses</span>
                                                             ) : item.returnStatus === 'Approved' ? (
-                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-500/15 text-blue-400 border border-blue-500/30">✓ Returned</span>
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-500/15 text-blue-400 border border-blue-500/30">✓ Direturn</span>
                                                             ) : item.returnStatus === 'Rejected' ? (
-                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/15 text-red-400 border border-red-500/30">✕ Return Rejected</span>
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/15 text-red-400 border border-red-500/30">✕ Return Ditolak</span>
                                                             ) : order.ratedItems?.includes(item.orderItemId) ? (
-                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">★ Rated</span>
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">★ Sudah Diulas</span>
                                                             ) : (
-                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-700/50 text-slate-500 border border-slate-700">Pending Review</span>
+                                                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-700/50 text-slate-500 border border-slate-700">Menunggu Ulasan</span>
                                                             )}
                                                         </div>
                                                     </div>
@@ -428,31 +442,31 @@ export default function AdminPage() {
                 {/* Products Tab */}
                 {activeTab === 'products' && (
                     <div className="glass-panel p-6 animate-fade-in">
-                        <h2 className="text-xl font-bold text-white mb-6">Manage Products</h2>
+                        <h2 className="text-xl font-bold text-white mb-6">Kelola Produk</h2>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="border-b border-slate-700 text-slate-400 text-sm">
-                                        <th className="pb-3 px-4 font-semibold">Image</th>
-                                        <th className="pb-3 px-4 font-semibold">Name</th>
+                                        <th className="pb-3 px-4 font-semibold">Gambar</th>
+                                        <th className="pb-3 px-4 font-semibold">Nama</th>
                                         <th className="pb-3 px-4 font-semibold">Brand</th>
-                                        <th className="pb-3 px-4 font-semibold">Price</th>
-                                        <th className="pb-3 px-4 font-semibold">Actions</th>
+                                        <th className="pb-3 px-4 font-semibold">Harga</th>
+                                        <th className="pb-3 px-4 font-semibold">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {allProducts.map(product => (
                                         <tr key={product.id} className="border-b border-slate-700/50 hover:bg-slate-800/30">
                                             <td className="py-3 px-4">
-                                                <img src={product.image} className="w-10 h-10 object-cover rounded bg-slate-800" />
+                                                <img src={product.image} className="w-10 h-10 object-contain bg-slate-800 p-0.5 rounded" />
                                             </td>
                                             <td className="py-3 px-4 text-white text-sm">{product.name}</td>
                                             <td className="py-3 px-4 text-slate-300 text-sm">{product.brand}</td>
                                             <td className="py-3 px-4 text-emerald-400 text-sm font-bold">{formatPrice(product.price)}</td>
                                             <td className="py-3 px-4 space-x-2">
-                                                <button onClick={() => handleVerifyProduct(product.id)} className={`text-xs px-3 py-1 rounded transition-colors ${product.verifiedByTrustX ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600'}`}>{product.verifiedByTrustX ? 'Verified' : 'Verify'}</button>
+                                                <button onClick={() => handleVerifyProduct(product.id)} className={`text-xs px-3 py-1 rounded transition-colors ${product.verifiedByTrustX ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600'}`}>{product.verifiedByTrustX ? 'Terverifikasi' : 'Verifikasi'}</button>
                                                 <button onClick={() => setEditingProduct(product)} className="text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 px-3 py-1 rounded transition-colors">Edit</button>
-                                                <button onClick={() => handleDeleteProduct(product.id)} className="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1 rounded transition-colors">Delete</button>
+                                                <button onClick={() => handleDeleteProduct(product.id)} className="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1 rounded transition-colors">Hapus</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -466,23 +480,23 @@ export default function AdminPage() {
                 {activeTab === 'users' && (
                     <div className="glass-panel p-6 animate-fade-in">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-white">Manage Users</h2>
+                            <h2 className="text-xl font-bold text-white">Kelola User</h2>
                             <button
                                 onClick={() => setEditingUser({ id: 'new', name: '', email: '', password: '', role: 'buyer' })}
                                 className="btn-primary px-4 py-2 text-sm"
                             >
-                                + Add User
+                                + Tambah User
                             </button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="border-b border-slate-700 text-slate-400 text-sm">
-                                        <th className="pb-3 px-4 font-semibold">Name</th>
+                                        <th className="pb-3 px-4 font-semibold">Nama</th>
                                         <th className="pb-3 px-4 font-semibold">Email</th>
                                         <th className="pb-3 px-4 font-semibold">Role</th>
-                                        <th className="pb-3 px-4 font-semibold">Badges (Seller)</th>
-                                        <th className="pb-3 px-4 font-semibold">Actions</th>
+                                        <th className="pb-3 px-4 font-semibold">Badge (Seller)</th>
+                                        <th className="pb-3 px-4 font-semibold">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -513,9 +527,9 @@ export default function AdminPage() {
                                                 )}
                                             </td>
                                             <td className="py-4 px-4 space-x-2">
-                                                <button onClick={() => handleVerifyUser(u.id)} className={`text-xs px-3 py-1 rounded transition-colors ${u.isVerified ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600'}`}>{u.isVerified ? 'Verified' : 'Verify'}</button>
+                                                <button onClick={() => handleVerifyUser(u.id)} className={`text-xs px-3 py-1 rounded transition-colors ${u.isVerified ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600'}`}>{u.isVerified ? 'Terverifikasi' : 'Verifikasi'}</button>
                                                 <button onClick={() => setEditingUser(u)} className="text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 px-3 py-1 rounded transition-colors">Edit</button>
-                                                <button onClick={() => handleDeleteUser(u.id)} className="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1 rounded transition-colors" disabled={u.email === user?.email}>Delete</button>
+                                                <button onClick={() => handleDeleteUser(u.id)} className="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1 rounded transition-colors" disabled={u.email === user?.email}>Hapus</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -527,18 +541,19 @@ export default function AdminPage() {
 
             </div>
 
+
             {/* Editing Product Modal */}
             {editingProduct && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <div className="bg-slate-900 w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl">
-                        <h3 className="text-xl font-bold text-white mb-4">Edit Product</h3>
+                        <h3 className="text-xl font-bold text-white mb-4">Edit Produk</h3>
                         <form onSubmit={handleSaveProduct} className="space-y-4">
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Name</label>
+                                <label className="block text-sm text-slate-400 mb-1">Nama</label>
                                 <input type="text" value={editingProduct.name} onChange={e => setEditingProduct({ ...editingProduct, name: e.target.value })} className="input-field" required />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Price (Rp)</label>
+                                <label className="block text-sm text-slate-400 mb-1">Harga (Rp)</label>
                                 <input type="number" value={editingProduct.price} onChange={e => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })} className="input-field" required />
                             </div>
                             <div>
@@ -546,8 +561,8 @@ export default function AdminPage() {
                                 <input type="number" value={editingProduct.stock} onChange={e => setEditingProduct({ ...editingProduct, stock: Number(e.target.value) })} className="input-field" required />
                             </div>
                             <div className="flex gap-3 mt-6">
-                                <button type="button" onClick={() => setEditingProduct(null)} className="flex-1 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors">Cancel</button>
-                                <button type="submit" className="flex-1 btn-primary px-4 py-2">Save Changes</button>
+                                <button type="button" onClick={() => setEditingProduct(null)} className="flex-1 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors">Batal</button>
+                                <button type="submit" className="flex-1 btn-primary px-4 py-2">Simpan Perubahan</button>
                             </div>
                         </form>
                     </div>
@@ -558,10 +573,10 @@ export default function AdminPage() {
             {editingUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <div className="bg-slate-900 w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl">
-                        <h3 className="text-xl font-bold text-white mb-4">{editingUser.id === 'new' ? 'Add User' : 'Edit User'}</h3>
+                        <h3 className="text-xl font-bold text-white mb-4">{editingUser.id === 'new' ? 'Tambah User' : 'Edit User'}</h3>
                         <form onSubmit={handleSaveUser} className="space-y-4">
                             <div>
-                                <label className="block text-sm text-slate-400 mb-1">Name</label>
+                                <label className="block text-sm text-slate-400 mb-1">Nama</label>
                                 <input type="text" value={editingUser.name} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} className="input-field" required />
                             </div>
                             <div>
@@ -590,8 +605,8 @@ export default function AdminPage() {
                                 />
                             </div>
                             <div className="flex gap-3 mt-6">
-                                <button type="button" onClick={() => setEditingUser(null)} className="flex-1 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors">Cancel</button>
-                                <button type="submit" className="flex-1 btn-primary px-4 py-2">Save User</button>
+                                <button type="button" onClick={() => setEditingUser(null)} className="flex-1 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors">Batal</button>
+                                <button type="submit" className="flex-1 btn-primary px-4 py-2">Simpan User</button>
                             </div>
                         </form>
                     </div>
@@ -609,25 +624,32 @@ export default function AdminPage() {
                                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                             )}
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">Confirm {confirmModal.action}al</h3>
-                        <p className="text-slate-400 text-sm mb-8 leading-relaxed">Are you sure you want to <span className="text-white font-bold">{confirmModal.action}</span> this return request? This action cannot be undone.</p>
+                        <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">Konfirmasi Return</h3>
+                        <p className="text-slate-400 text-sm mb-8 leading-relaxed">Yakin ingin <span className="text-white font-bold">{confirmModal.action === 'approve' ? 'menyetujui' : 'menolak'}</span> request return ini? Tindakan ini tidak bisa dibatalkan.</p>
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 onClick={() => setConfirmModal({ isOpen: false, orderId: null, itemId: null, action: null })}
                                 className="py-3 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700 transition-colors"
                             >
-                                Cancel
+                                Batal
                             </button>
                             <button
                                 onClick={() => handleReturnAction(confirmModal.orderId, confirmModal.itemIndex, confirmModal.action)}
                                 className={`py-3 rounded-xl font-bold text-white transition-all ${confirmModal.action === 'approve' ? 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20' : 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20'}`}
                             >
-                                Yes, {confirmModal.action}
+                                Ya, {confirmModal.action === 'approve' ? 'setujui' : 'tolak'}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* Order Detail Modal for Admin */}
+            <OrderDetailModal
+                isOpen={orderDetailModal.isOpen}
+                order={orderDetailModal.order}
+                onClose={() => setOrderDetailModal({ isOpen: false, order: null })}
+            />
         </AuthGuard>
     );
 }

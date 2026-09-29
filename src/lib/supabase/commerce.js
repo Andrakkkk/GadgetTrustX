@@ -13,6 +13,7 @@ export const deviceSelect = `
   chipset,
   description,
   image,
+  location,
   verified_by_trustx,
   is_trade_in,
   is_custom_offer,
@@ -22,6 +23,7 @@ export const deviceSelect = `
     email,
     name,
     store_name,
+    address,
     is_verified,
     badges
   )
@@ -45,6 +47,17 @@ export function mapCartRow(row) {
 }
 
 export function mapReviewRow(row) {
+  let commentText = row.comment || '';
+  let sellerResp = row.seller_response || null;
+  let sellerRespDate = row.seller_response_date ? formatDateLabel(row.seller_response_date) : null;
+  let sellerRespImg = row.seller_response_image || null;
+
+  if (!sellerResp && commentText.includes('[Respon Penjual]:')) {
+    const parts = commentText.split(/\[Respon Penjual\]:\s*/);
+    commentText = parts[0].trim();
+    sellerResp = parts[1]?.trim() || null;
+  }
+
   return {
     id: row.id,
     deviceId: row.devices?.id || row.device_id,
@@ -53,10 +66,13 @@ export function mapReviewRow(row) {
     buyerEmail: row.buyer?.email || '',
     buyerName: row.buyer_name || row.buyer?.name || 'Buyer',
     rating: row.rating,
-    comment: row.comment || '',
+    comment: commentText,
     image: row.image || null,
     orderId: row.order_id || null,
     orderItemId: row.order_item_id || null,
+    sellerResponse: sellerResp,
+    sellerResponseDate: sellerRespDate,
+    sellerResponseImage: sellerRespImg,
     date: formatDateLabel(row.created_at),
   };
 }
@@ -85,6 +101,7 @@ export function mapChatRow(row) {
     sellerName: row.seller?.store_name || row.seller?.name || 'Seller',
     buyerLastSeenAt: row.buyer?.last_seen_at || null,
     sellerLastSeenAt: row.seller?.last_seen_at || null,
+    createdAt: row.created_at,
     messages: (row.chat_messages || []).map(mapMessageRow),
   };
 }
@@ -99,6 +116,7 @@ export function mapMessageRow(row) {
     text: row.body || '',
     read: row.is_read,
     timestamp: formatTimeLabel(row.created_at),
+    createdAt: row.created_at,
     ...(metadata.product ? { product: metadata.product } : {}),
     ...(metadata.catalog ? { catalog: metadata.catalog } : {}),
     ...(metadata.imageUrl ? { imageUrl: metadata.imageUrl } : {}),

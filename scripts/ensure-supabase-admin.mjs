@@ -15,6 +15,12 @@ const env = Object.fromEntries(
 const email = env.ADMIN_SECRET_EMAIL;
 const password = env.ADMIN_SECRET_PASSWORD;
 
+function getSupabasePassword(value) {
+  if (typeof value !== 'string') return value;
+  if (value.length === 0 || value.length >= 6) return value;
+  return `${value}#GadgetTrustX`;
+}
+
 if (!email || !password) {
   throw new Error('ADMIN_SECRET_EMAIL and ADMIN_SECRET_PASSWORD are required.');
 }
@@ -38,7 +44,7 @@ let adminUser = usersData.users.find((user) => user.email === email);
 if (!adminUser) {
   const { data, error } = await supabase.auth.admin.createUser({
     email,
-    password,
+    password: getSupabasePassword(password),
     email_confirm: true,
     user_metadata: {
       name: 'Platform Admin',
@@ -50,7 +56,7 @@ if (!adminUser) {
   adminUser = data.user;
 } else {
   const { data, error } = await supabase.auth.admin.updateUserById(adminUser.id, {
-    password,
+    password: getSupabasePassword(password),
     email_confirm: true,
     user_metadata: {
       ...adminUser.user_metadata,

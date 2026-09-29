@@ -45,6 +45,10 @@ export async function POST(request) {
   }
 
   const body = await request.json();
+  if (!body.password || body.password.length < 6) {
+    return NextResponse.json({ error: 'Password minimal 6 karakter.' }, { status: 400 });
+  }
+
   const { data, error } = await result.supabase.auth.admin.createUser({
     email: body.email,
     password: getSupabasePassword(body.password),
@@ -83,6 +87,10 @@ export async function PATCH(request) {
 
   const body = await request.json();
   if (body.password) {
+    if (body.password.length < 6) {
+      return NextResponse.json({ error: 'Password minimal 6 karakter.' }, { status: 400 });
+    }
+
     const { error: passwordError } = await result.supabase.auth.admin.updateUserById(body.id, {
       password: getSupabasePassword(body.password),
     });

@@ -8,17 +8,19 @@ export async function PATCH(request) {
   }
 
   const body = await request.json();
+  const updateFields = {
+    updated_at: new Date().toISOString(),
+  };
+  if (body.name !== undefined) updateFields.name = body.name;
+  if (body.phone !== undefined) updateFields.phone = body.phone;
+  if (body.address !== undefined) updateFields.address = body.address;
+  if (body.bio !== undefined) updateFields.bio = body.bio;
+  if (body.storeName !== undefined) updateFields.store_name = body.storeName;
+  if (body.avatar !== undefined) updateFields.avatar = body.avatar;
+
   const { data, error } = await result.supabase
     .from('profiles')
-    .update({
-      name: body.name,
-      phone: body.phone,
-      address: body.address,
-      bio: body.bio,
-      store_name: body.storeName,
-      avatar: body.avatar,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateFields)
     .eq('id', result.profile.id)
     .select('*')
     .single();

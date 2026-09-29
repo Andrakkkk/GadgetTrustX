@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" fill="none">
+  <defs>
+    <linearGradient id="gtx-full-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="50%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="gtx-accent-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#34D399"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Logo Mark Left -->
+  <g transform="translate(10, 10) scale(0.35)">
+    <!-- Outer Shield Contour -->
+    <path d="M256 32 C330 32 410 60 432 76 C432 210 420 370 256 480 C92 370 80 210 80 76 C102 60 182 32 256 32 Z" 
+          fill="url(#gtx-full-grad)" opacity="0.2" />
+
+    <!-- Shield Border -->
+    <path d="M256 44 C322 44 394 70 414 84 C414 200 403 346 256 452 C109 346 98 200 98 84 C118 70 190 44 256 44 Z" 
+          stroke="url(#gtx-full-grad)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Smartphone Frame -->
+    <rect x="186" y="116" width="140" height="260" rx="28" fill="none" stroke="url(#gtx-accent-grad)" stroke-width="16" />
+
+    <!-- Notch Bar -->
+    <line x1="230" y1="138" x2="282" y2="138" stroke="#60A5FA" stroke-width="8" stroke-linecap="round" />
+
+    <!-- Monogram X Lock -->
+    <path d="M216 200 L296 290 M296 200 L216 290" stroke="url(#gtx-accent-grad)" stroke-width="20" stroke-linecap="round" />
+
+    <!-- Verified Badge -->
+    <circle cx="340" cy="340" r="36" fill="#10B981" />
+    <path d="M324 340 L335 351 L358 328" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- Typography Right -->
+  <text x="210" y="112" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="64" fill="#FFFFFF" letter-spacing="-1">
+    Gadget<tspan fill="url(#gtx-accent-grad)">TrustX</tspan>
+  </text>
+
+  <!-- Subtitle Tagline -->
+  <text x="212" y="152" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="18" fill="#64748B" letter-spacing="4">
+    MARKETPLACE GADGET TERPERCAYA
+  </text>
+</svg>
