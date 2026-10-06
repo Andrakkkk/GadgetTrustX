@@ -1,0 +1,23 @@
+{
+  "name": "gadgetrustx-testing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pengujian otomatis GadgetTrustX (PKPL Kelas B - Kelompok 13)",
+  "scripts": {
+    "test": "playwright test",
+    "test:security": "playwright test tests/security --headed",
+    "test:functionality": "playwright test tests/functionality",
+    "test:performance": "playwright test tests/performance",
+    "test:usability": "playwright test tests/usability",
+    "test:reliability": "playwright test tests/reliability --repeat-each=3",
+    "report": "playwright show-report",
+    "lighthouse": "lighthouse https://gadgetrustx.netlify.app/ --output html --output-path ./lighthouse-report.html --view",
+    "codegen": "playwright codegen https://gadgetrustx.netlify.app/login"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.48.0",
+    "dotenv": "^16.4.5",
+    "lighthouse": "^12.2.0"
+  }
+}
