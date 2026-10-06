@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GadgetTrustX - Playwright Security Test Report</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #0b0f19;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 32px 20px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #1e293b;
+      margin-bottom: 36px;
+      gap: 16px;
+    }
+    .badge-passed-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-passed-top::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: #34d399;
+      border-radius: 50%;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-top: 6px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .subtitle a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+    .subtitle a:hover {
+      text-decoration: underline;
+    }
+    .section-title-wrap {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .section-tag {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #f43f5e;
+    }
+    .section-h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .pill-nfr-red {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: #fda4af;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .file-ref {
+      font-size: 12px;
+      font-family: Consolas, monospace;
+      color: #94a3b8;
+    }
+    .tc-group {
+      margin-bottom: 24px;
+    }
+    .tc-header {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 8px;
+    }
+    .img-preview {
+      display: block;
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      margin-bottom: 16px;
+    }
+    .summary-box {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin-top: 16px;
+      margin-bottom: 40px;
+    }
+    .summary-counts {
+      font-family: Consolas, monospace;
+      font-weight: 700;
+    }
+    .summary-counts span {
+      margin-left: 16px;
+    }
+    .summary-total {
+      color: #e2e8f0;
+    }
+    .summary-success {
+      color: #34d399;
+    }
+    .footer-box {
+      background: rgba(6, 78, 59, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .footer-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .footer-sub {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .footer-stats {
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      display: flex;
+      gap: 20px;
+    }
+    .tip-box {
+      background: #1e293b;
+      border-left: 4px solid #f43f5e;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <header>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="badge-passed-top">12 of 12 Passed</span>
+          <span style="font-size: 12px; color: #64748b;">Playwright Security Testing Suite</span>
+        </div>
+        <h1>Playwright Security Test Report</h1>
+        <p class="subtitle">System Under Test: <a href="https://gadgetrustx.netlify.app" target="_blank">GadgetTrustX</a> · Kelompok 13 PKPL</p>
+      </div>
+    </header>
+
+    <div class="tip-box">
+      🛡️ <strong>Laporan Pengujian Keamanan (Coverage Items for Security):</strong> Gambar tangkap layar di bawah telah dirender sesuai format Playwright. Anda bisa langsung <strong>Klik Kanan &rarr; Salin Gambar (Copy Image)</strong> untuk ditempelkan ke Google Docs.
+    </div>
+
+    <!-- NFR-001 -->
+    <section id="nfr-001">
+      <div class="section-title-wrap">
+        <div>
+          <span class="section-tag">Coverage Items for Security</span>
+          <h2 class="section-h2">
+            <span class="pill-nfr-red">NFR-001</span>
+            Validasi Kredensial Pengguna & Proteksi Form Otentikasi
+          </h2>
+        </div>
+        <div>
+          <span class="file-ref">e2e/security.spec.js</span>
+        </div>
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-01: Memvalidasi penolakan login dengan format email tidak valid dan password kosong</div>
+        <img class="img-preview" src="screenshots/TC-SEC-01.png" alt="TC-SEC-01">
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-02: Memvalidasi atribut keamanan type=password pada input kata sandi</div>
+        <img class="img-preview" src="screenshots/TC-SEC-02.png" alt="TC-SEC-02">
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-03: Memvalidasi pesan umpan balik galat login tidak membocorkan informasi spesifik akun</div>
+        <img class="img-preview" src="screenshots/TC-SEC-03.png" alt="TC-SEC-03">
+      </div>
+
+      <div class="summary-box">
+        <span style="color: #94a3b8;">Ringkasan Hasil Uji NFR-001:</span>
+        <div class="summary-counts">
+          <span class="summary-total">Total: 3</span>
+          <span class="summary-success">Successful: 3</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- NFR-002 -->
+    <section id="nfr-002">
+      <div class="section-title-wrap">
+        <div>
+          <span class="section-tag">Coverage Items for Security</span>
+          <h2 class="section-h2">
+            <span class="pill-nfr-red">NFR-002</span>
+            Proteksi Rute Terlindungi & AuthGuard Redirection
+          </h2>
+        </div>
+        <div>
+          <span class="file-ref">e2e/security.spec.js</span>
+        </div>
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-04: Memvalidasi pencegahan akses tanpa otentikasi ke halaman Profil Pembeli (/buyer-profile)</div>
+        <img class="img-preview" src="screenshots/TC-SEC-04.png" alt="TC-SEC-04">
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-05: Memvalidasi pencegahan akses tanpa otentikasi ke halaman Profil Penjual (/seller-profile)</div>
+        <img class="img-preview" src="screenshots/TC-SEC-05.png" alt="TC-SEC-05">
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-06: Memvalidasi pembatasan akses ke halaman Dashboard Admin (/admin)</div>
+        <img class="img-preview" src="screenshots/TC-SEC-06.png" alt="TC-SEC-06">
+      </div>
+
+      <div class="summary-box">
+        <span style="color: #94a3b8;">Ringkasan Hasil Uji NFR-002:</span>
+        <div class="summary-counts">
+          <span class="summary-total">Total: 3</span>
+          <span class="summary-success">Successful: 3</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- NFR-003 -->
+    <section id="nfr-003">
+      <div class="section-title-wrap">
+        <div>
+          <span class="section-tag">Coverage Items for Security</span>
+          <h2 class="section-h2">
+            <span class="pill-nfr-red">NFR-003</span>
+            Sanitasi Input & Pencegahan Serangan Injeksi (Anti-SQLi & Anti-XSS)
+          </h2>
+        </div>
+        <div>
+          <span class="file-ref">e2e/security.spec.js</span>
+        </div>
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-07: Memvalidasi penyaringan payload SQL Injection pada form input IMEI dan filter pencarian</div>
+        <img class="img-preview" src="screenshots/TC-SEC-07.png" alt="TC-SEC-07">
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-08: Memvalidasi netralisasi payload Cross-Site Scripting (XSS) pada formulir input</div>
+        <img class="img-preview" src="screenshots/TC-SEC-08.png" alt="TC-SEC-08">
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-09: Memvalidasi pembatasan panjang karakter (Length Limiting) untuk mencegah buffer overload</div>
+        <img class="img-preview" src="screenshots/TC-SEC-09.png" alt="TC-SEC-09">
+      </div>
+
+      <div class="summary-box">
+        <span style="color: #94a3b8;">Ringkasan Hasil Uji NFR-003:</span>
+        <div class="summary-counts">
+          <span class="summary-total">Total: 3</span>
+          <span class="summary-success">Successful: 3</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- NFR-004 -->
+    <section id="nfr-004">
+      <div class="section-title-wrap">
+        <div>
+          <span class="section-tag">Coverage Items for Security</span>
+          <h2 class="section-h2">
+            <span class="pill-nfr-red">NFR-004</span>
+            Proteksi Bot Transaksi & Isolasi Kredensial API Sensitif
+          </h2>
+        </div>
+        <div>
+          <span class="file-ref">e2e/security.spec.js</span>
+        </div>
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-10: Memvalidasi ketersediaan widget verifikasi bot Cloudflare Turnstile pada transaksi penting</div>
+        <img class="img-preview" src="screenshots/TC-SEC-10.png" alt="TC-SEC-10">
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-11: Memvalidasi ketiadaan kunci API atau rahasia sensitif (Zero Hardcoded Secrets) di atribut DOM</div>
+        <img class="img-preview" src="screenshots/TC-SEC-11.png" alt="TC-SEC-11">
+      </div>
+
+      <div class="summary-box">
+        <span style="color: #94a3b8;">Ringkasan Hasil Uji NFR-004:</span>
+        <div class="summary-counts">
+          <span class="summary-total">Total: 2</span>
+          <span class="summary-success">Successful: 2</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- NFR-005 -->
+    <section id="nfr-005">
+      <div class="section-title-wrap">
+        <div>
+          <span class="section-tag">Coverage Items for Security</span>
+          <h2 class="section-h2">
+            <span class="pill-nfr-red">NFR-005</span>
+            Terminasi Sesi & Pembersihan Status Login (Secure Logout)
+          </h2>
+        </div>
+        <div>
+          <span class="file-ref">e2e/security.spec.js</span>
+        </div>
+      </div>
+
+      <div class="tc-group">
+        <div class="tc-header">TC-SEC-12: Memvalidasi mekanisme pembersihan token sesi (Secure Session Termination) saat proses logout</div>
+        <img class="img-preview" src="screenshots/TC-SEC-12.png" alt="TC-SEC-12">
+      </div>
+
+      <div class="summary-box">
+        <span style="color: #94a3b8;">Ringkasan Hasil Uji NFR-005:</span>
+        <div class="summary-counts">
+          <span class="summary-total">Total: 1</span>
+          <span class="summary-success">Successful: 1</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Overall Footer -->
+    <div class="footer-box">
+      <div>
+        <div class="footer-title">Status Pengujian Keamanan: Lulus 100% (All Passed)</div>
+        <div class="footer-sub">Seluruh 12 kasus uji keamanan berhasil diverifikasi tanpa kegagalan pada kakas Playwright.</div>
+      </div>
+      <div class="footer-stats">
+        <span>Total: <strong>12</strong></span>
+        <span style="color: #34d399;">Passed: <strong>12</strong></span>
+        <span style="color: #94a3b8;">Failed: <strong>0</strong></span>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
