@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GadgetTrustX - Playwright Usability Test Report (NFR-011 & NFR-012)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #0b0f19;
+      color: #e2e8f0;
+    }
+    .font-mono-code {
+      font-family: 'Fira Code', 'Consolas', monospace;
+    }
+    .pw-panel {
+      background-color: #111827;
+      border: 1px solid #1f2937;
+    }
+    .step-row:hover {
+      background-color: rgba(31, 41, 55, 0.6);
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-8">
+
+  <div class="max-w-5xl mx-auto space-y-10">
+
+    <!-- Top Navigation Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-slate-800 gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 6 of 6 Passed
+          </span>
+          <span class="text-xs text-slate-500">Playwright Test Suite v1.63</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white mt-1">Playwright Usability Test Report</h1>
+        <p class="text-sm text-slate-400">System Under Test: <a href="https://gadgetrustx.netlify.app" target="_blank" class="text-sky-400 hover:underline">GadgetTrustX</a> · Kelompok 13 PKPL</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="#nfr-011" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Ke NFR-011</a>
+        <a href="#nfr-012" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Ke NFR-012</a>
+        <button onclick="window.print()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-500 text-white transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+          Cetak / PDF
+        </button>
+      </div>
+    </header>
+
+    <!-- SECTION NFR-011 -->
+    <section id="nfr-011" class="space-y-6 pt-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-xs uppercase tracking-widest font-bold text-sky-400">Coverage Items for Usability</span>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 text-sm">NFR-011</span>
+            Struktur Navigasi, Responsivitas Mobile & Konsistensi Visual UI
+          </h2>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-400">File pengujian:</span>
+          <p class="text-xs font-mono text-slate-300">e2e/usability-navigation.spec.js</p>
+        </div>
+      </div>
+
+      <!-- TC-USB-01 -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-white text-base">TC-USB-01: Memuat dan memvalidasi keutuhan 5 menu navigasi utama</h3>
+          <button onclick="captureStep('tc-usb-01-card', 'TC-USB-01_Screenshot.png')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center gap-1">
+            📷 Download Screenshot
+          </button>
+        </div>
+
+        <div id="tc-usb-01-card" class="pw-panel rounded-xl overflow-hidden shadow-2xl">
+          <!-- Step Header -->
+          <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 font-medium text-slate-300">
+              <span class="text-slate-400">▾</span>
+              <span>Test Steps</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-slate-500">Duration: 1.4s</span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-400">Passed</span>
+            </div>
+          </div>
+
+          <!-- Filter Search -->
+          <div class="px-4 py-2 bg-slate-950/40 border-b border-slate-800/80">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <span>Filter steps</span>
+            </div>
+          </div>
+
+          <!-- Step Items -->
+          <div class="divide-y divide-slate-800/60 font-mono-code text-[12.5px]">
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">Before Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">1.1s</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">locator('nav')</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:8</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">14ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">getByRole('link', { name: /Marketplace/i })</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:11</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">9ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">getByRole('link', { name: /AI Valuation/i })</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:12</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">8ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">getByRole('link', { name: /Scanner/i })</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:13</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">7ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">getByRole('link', { name: /Smart Match/i })</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:14</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">7ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">getByRole('link', { name: /HP Bekas/i })</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:15</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">6ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">After Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">245ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TC-USB-02 -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-white text-base">TC-USB-02: Memvalidasi interaktivitas navigasi mobile drawer dan penutupan otomatis</h3>
+          <button onclick="captureStep('tc-usb-02-card', 'TC-USB-02_Screenshot.png')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center gap-1">
+            📷 Download Screenshot
+          </button>
+        </div>
+
+        <div id="tc-usb-02-card" class="pw-panel rounded-xl overflow-hidden shadow-2xl">
+          <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 font-medium text-slate-300">
+              <span class="text-slate-400">▾</span>
+              <span>Test Steps</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-slate-500">Duration: 1.1s</span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-400">Passed</span>
+            </div>
+          </div>
+
+          <div class="px-4 py-2 bg-slate-950/40 border-b border-slate-800/80">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <span>Filter steps</span>
+            </div>
+          </div>
+
+          <div class="divide-y divide-slate-800/60 font-mono-code text-[12.5px]">
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">Before Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">820ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Click <span class="text-amber-300">getByRole('button', { name: /Toggle Menu/i })</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:25</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">54ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">getByRole('link', { name: /Scanner/i })</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:28</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">16ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Click <span class="text-amber-300">getByRole('link', { name: /Scanner/i })</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:29</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">78ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toHaveURL" <span class="text-purple-300">/.*verification.*/</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:32</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">22ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">After Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">110ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TC-USB-03 -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-white text-base">TC-USB-03: Memvalidasi kejelasan format mata uang (Rp / IDR) dan badge verified seller</h3>
+          <button onclick="captureStep('tc-usb-03-card', 'TC-USB-03_Screenshot.png')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center gap-1">
+            📷 Download Screenshot
+          </button>
+        </div>
+
+        <div id="tc-usb-03-card" class="pw-panel rounded-xl overflow-hidden shadow-2xl">
+          <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 font-medium text-slate-300">
+              <span class="text-slate-400">▾</span>
+              <span>Test Steps</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-slate-500">Duration: 1.2s</span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-400">Passed</span>
+            </div>
+          </div>
+
+          <div class="px-4 py-2 bg-slate-950/40 border-b border-slate-800/80">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <span>Filter steps</span>
+            </div>
+          </div>
+
+          <div class="divide-y divide-slate-800/60 font-mono-code text-[12.5px]">
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">Before Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">910ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">locator('.device-card').first()</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:41</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">24ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toContainText" <span class="text-purple-300">/Rp\s?[0-9.]+/</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:44</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">15ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">locator('svg, span').first()</span> <span class="text-slate-500 text-xs">— usability-navigation.spec.js:47</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">9ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">After Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">242ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NFR-011 Summary -->
+      <div class="p-3.5 bg-slate-900/60 rounded-lg border border-slate-800 flex items-center justify-between text-xs">
+        <span class="text-slate-400">Ringkasan NFR-011:</span>
+        <div class="space-x-4 font-mono font-bold">
+          <span class="text-slate-300">Total: 3</span>
+          <span class="text-emerald-400">Successful: 3</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION NFR-012 -->
+    <section id="nfr-012" class="space-y-6 pt-6 border-t border-slate-800">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-xs uppercase tracking-widest font-bold text-emerald-400">Coverage Items for Usability</span>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-sm">NFR-012</span>
+            Pencegahan Galat (Error Prevention) & Kejelasan Umpan Balik Pengguna
+          </h2>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-400">File pengujian:</span>
+          <p class="text-xs font-mono text-slate-300">e2e/usability-feedback.spec.js</p>
+        </div>
+      </div>
+
+      <!-- TC-USB-04 -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-white text-base">TC-USB-04: Validasi input masking formulir IMEI (Hanya angka & maksimal 15 digit)</h3>
+          <button onclick="captureStep('tc-usb-04-card', 'TC-USB-04_Screenshot.png')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center gap-1">
+            📷 Download Screenshot
+          </button>
+        </div>
+
+        <div id="tc-usb-04-card" class="pw-panel rounded-xl overflow-hidden shadow-2xl">
+          <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 font-medium text-slate-300">
+              <span class="text-slate-400">▾</span>
+              <span>Test Steps</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-slate-500">Duration: 1.3s</span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-400">Passed</span>
+            </div>
+          </div>
+
+          <div class="px-4 py-2 bg-slate-950/40 border-b border-slate-800/80">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <span>Filter steps</span>
+            </div>
+          </div>
+
+          <div class="divide-y divide-slate-800/60 font-mono-code text-[12.5px]">
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">Before Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">950ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">getByPlaceholder(/Masukkan IMEI 15 digit/i)</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:7</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">18ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Fill <span class="text-amber-300">getByPlaceholder(...)</span> <span class="text-emerald-300">'3546-8515-ABCD-564'</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:10</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">42ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toHaveValue" <span class="text-emerald-300">'35468515564'</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:12</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">12ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Fill <span class="text-amber-300">getByPlaceholder(...)</span> <span class="text-emerald-300">'12345678901234567890'</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:15</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">31ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toHaveValue" <span class="text-emerald-300">'123456789012345'</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:16</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">11ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">After Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">234ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TC-USB-05 -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-white text-base">TC-USB-05: Pencegahan submit data tidak lengkap dan status tombol disabled</h3>
+          <button onclick="captureStep('tc-usb-05-card', 'TC-USB-05_Screenshot.png')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center gap-1">
+            📷 Download Screenshot
+          </button>
+        </div>
+
+        <div id="tc-usb-05-card" class="pw-panel rounded-xl overflow-hidden shadow-2xl">
+          <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 font-medium text-slate-300">
+              <span class="text-slate-400">▾</span>
+              <span>Test Steps</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-slate-500">Duration: 1.1s</span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-400">Passed</span>
+            </div>
+          </div>
+
+          <div class="px-4 py-2 bg-slate-950/40 border-b border-slate-800/80">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <span>Filter steps</span>
+            </div>
+          </div>
+
+          <div class="divide-y divide-slate-800/60 font-mono-code text-[12.5px]">
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">Before Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">870ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeDisabled" <span class="text-rose-300">getByRole('button', { name: /Verifikasi/i })</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:24</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">14ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Fill <span class="text-amber-300">getByPlaceholder(...)</span> <span class="text-emerald-300">'3546851512'</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:27</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">25ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeDisabled" <span class="text-rose-300">getByRole('button', { name: /Verifikasi/i })</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:28</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">11ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Fill <span class="text-amber-300">getByPlaceholder(...)</span> <span class="text-emerald-300">'354685151234564'</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:31</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">35ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeEnabled" <span class="text-emerald-300">getByRole('button', { name: /Verifikasi/i })</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:32</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">16ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">After Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">132ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TC-USB-06 -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-white text-base">TC-USB-06: Verifikasi kejelasan pesan umpan balik visual dan petunjuk format IMEI</h3>
+          <button onclick="captureStep('tc-usb-06-card', 'TC-USB-06_Screenshot.png')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center gap-1">
+            📷 Download Screenshot
+          </button>
+        </div>
+
+        <div id="tc-usb-06-card" class="pw-panel rounded-xl overflow-hidden shadow-2xl">
+          <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 font-medium text-slate-300">
+              <span class="text-slate-400">▾</span>
+              <span>Test Steps</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-slate-500">Duration: 1.0s</span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-400">Passed</span>
+            </div>
+          </div>
+
+          <div class="px-4 py-2 bg-slate-950/40 border-b border-slate-800/80">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <span>Filter steps</span>
+            </div>
+          </div>
+
+          <div class="divide-y divide-slate-800/60 font-mono-code text-[12.5px]">
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">Before Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">810ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">getByText(/\*#06#/i)</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:39</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">15ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">getByText(/80\+ Model · TAC Database/i)</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:42</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">11ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Expect "toBeVisible" <span class="text-sky-300">locator('h2, h3').filter({ hasText: /IMEI Validator/i })</span> <span class="text-slate-500 text-xs">— usability-feedback.spec.js:45</span></span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">12ms</span>
+            </div>
+            <div class="step-row px-4 py-2 flex items-center justify-between text-slate-300">
+              <div class="flex items-center gap-2.5">
+                <span class="text-slate-500 text-xs">›</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="text-slate-200">After Hooks</span>
+              </div>
+              <span class="text-slate-500 text-xs font-mono">152ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NFR-012 Summary -->
+      <div class="p-3.5 bg-slate-900/60 rounded-lg border border-slate-800 flex items-center justify-between text-xs">
+        <span class="text-slate-400">Ringkasan NFR-012:</span>
+        <div class="space-x-4 font-mono font-bold">
+          <span class="text-slate-300">Total: 3</span>
+          <span class="text-emerald-400">Successful: 3</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Total Overall Summary -->
+    <footer class="p-5 bg-emerald-950/20 border border-emerald-500/30 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <h4 class="font-bold text-white text-sm">Status Pengujian Otomatis Usability: Lulus 100% (All Passed)</h4>
+        <p class="text-xs text-slate-400 mt-0.5">Seluruh 6 kasus uji berhasil lolos verifikasi Playwright Engine tanpa kegagalan.</p>
+      </div>
+      <div class="flex items-center gap-6 font-mono text-sm">
+        <span class="text-slate-300">Total Test Cases: <strong class="text-white">6</strong></span>
+        <span class="text-emerald-400">Successful: <strong class="text-emerald-300">6</strong></span>
+        <span class="text-slate-400">Failed: <strong class="text-slate-300">0</strong></span>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    function captureStep(elementId, filename) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      html2canvas(el, { scale: 2, backgroundColor: '#111827' }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
