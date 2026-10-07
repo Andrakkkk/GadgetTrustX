@@ -1,0 +1,57 @@
+﻿TEST DESIGN SPECIFICATION FROM INSPECTION CHECKLIST
+
+
+Kelas PKPL :  …
+Nomor Kelompok : … 
+Nama Anggota Kelompok : 
+1. 2. 3. 	
+
+	NIM :
+ 
+
+
+
+
+	Coverage Items for Security
+ID
+	Kriteria
+	Related Test Condition
+	Link GitHub pengerjaan testing
+	Tangkap Layar Total test case berbanding successful test
+	NFR-001
+	Tulis jelas apa Kriteria 1 anda
+	Class… Modul… yang berkorelasi
+	
+
+	
+
+	NFR-002
+	Tulis jelas apa Kriteria 2 anda
+	Class… Modul… yang berkorelasi
+	
+
+	
+
+	Coverage Items for Mantainability
+ID
+	Kriteria
+	Related Test Condition
+	Link GitHub pengerjaan testing
+	Tangkap Layar Test case / success ful test
+	NFR-003
+	Tulis jelas apa Kriteria 1 anda
+	Class… Modul… yang berkorelasi
+	
+
+	
+
+	NFR-004
+	Tulis jelas apa Kriteria 2 anda
+	Class… Modul… yang berkorelasi
+	
+
+	
+
+	
+
+…… LANJUTKAN UNTUK SELURUH ASPEK YANG ANDA TEMUKAN …

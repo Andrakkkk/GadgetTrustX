@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CloudflareTurnstile from '@/components/CloudflareTurnstile';
 import { createClient } from '@/lib/supabase/client';
+import { validatePassword, getPasswordStrength } from '@/utils/validation';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -77,13 +78,9 @@ export default function ResetPasswordPage() {
     event.preventDefault();
     setError('');
 
-    if (password.length < 6) {
-      setError('Password baru minimal 6 karakter.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Konfirmasi password tidak cocok.');
+    const passVal = validatePassword(password, { isNew: true, confirmPassword });
+    if (!passVal.isValid) {
+      setError(passVal.error);
       return;
     }
 
@@ -177,7 +174,8 @@ export default function ResetPasswordPage() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     className="input-field pr-12"
-                    placeholder="Minimal 6 karakter"
+                    placeholder="Min. 8 karakter (huruf & angka)"
+                    maxLength={72}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     autoComplete="new-password"
@@ -200,6 +198,26 @@ export default function ResetPasswordPage() {
                     )}
                   </button>
                 </div>
+
+                {password && (
+                  <div className="mt-2.5 space-y-1.5 animate-fade-in">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400">Kekuatan Sandi:</span>
+                      <span className={`font-bold ${getPasswordStrength(password).color}`}>
+                        {getPasswordStrength(password).label}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${getPasswordStrength(password).barColor}`}
+                        style={{ width: `${(getPasswordStrength(password).score / 3) * 100}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Wajib min. 8 karakter, kombinasi huruf dan angka.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -210,11 +228,18 @@ export default function ResetPasswordPage() {
                   type={showPassword ? 'text' : 'password'}
                   className="input-field"
                   placeholder="Ulangi password baru"
+                  maxLength={72}
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   autoComplete="new-password"
                   required
                 />
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="text-[11px] text-red-400 mt-1 font-medium">⚠️ Konfirmasi password belum cocok.</p>
+                )}
+                {confirmPassword && password === confirmPassword && (
+                  <p className="text-[11px] text-emerald-400 mt-1 font-medium">✓ Password cocok.</p>
+                )}
               </div>
 
               <CloudflareTurnstile

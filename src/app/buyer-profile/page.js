@@ -9,6 +9,7 @@ import TrackingModal from '@/components/TrackingModal';
 import { formatPrice } from '@/utils/formatPrice';
 import { apiFetch } from '@/lib/api-client';
 import OrderDetailModal from '@/components/OrderDetailModal';
+import { validatePhone, validateName, sanitizePhone } from '@/utils/validation';
 
 function PaymentDetailsModal({ order, onClose, onCancelOrder, onRefreshOrders, onOpenSnap }) {
   const [loading, setLoading] = useState(true);
@@ -754,6 +755,18 @@ export default function BuyerProfilePage() {
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
+    const nameVal = validateName(profileForm.name);
+    if (!nameVal.isValid) {
+      alert(`Gagal: ${nameVal.error}`);
+      return;
+    }
+    if (profileForm.phone) {
+      const phoneVal = validatePhone(profileForm.phone);
+      if (!phoneVal.isValid) {
+        alert(`Gagal: ${phoneVal.error}`);
+        return;
+      }
+    }
     setSavingProfile(true);
     let avatarUrl = user?.avatar || null;
     const fileInput = e.target.elements.avatarFile;
@@ -1934,11 +1947,27 @@ export default function BuyerProfilePage() {
 
                       <div>
                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Nama Tampilan</label>
-                        <input type="text" className="input-field" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} />
+                        <input
+                          type="text"
+                          maxLength={70}
+                          placeholder="Nama Lengkap"
+                          className="input-field"
+                          value={profileForm.name}
+                          onChange={e => setProfileForm({ ...profileForm, name: e.target.value })}
+                        />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Nomor Kontak</label>
-                        <input type="text" className="input-field" value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} />
+                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Nomor Kontak (Wajib Angka)</label>
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={15}
+                          placeholder="Contoh: 081234567890"
+                          className="input-field font-mono"
+                          value={profileForm.phone}
+                          onChange={e => setProfileForm({ ...profileForm, phone: sanitizePhone(e.target.value) })}
+                        />
+                        <p className="text-[10px] text-slate-500 mt-1">Hanya angka (10-15 digit, diawali 08...)</p>
                       </div>
                       <div className="md:col-span-2">
                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Alamat Pengiriman</label>

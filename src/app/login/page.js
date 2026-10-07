@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import CloudflareTurnstile from '@/components/CloudflareTurnstile';
+import { validateEmail, validatePassword, validateName, getPasswordStrength } from '@/utils/validation';
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -14,6 +15,7 @@ function LoginContent() {
       : '';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('buyer');
   const [error, setError] = useState('');
@@ -21,6 +23,7 @@ function LoginContent() {
   const [isRegister, setIsRegister] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Cloudflare Turnstile token
   const [captchaToken, setCaptchaToken] = useState('');
@@ -115,14 +118,35 @@ function LoginContent() {
     setError('');
     setSuccessMsg('');
 
-    if (!email || !password || (isRegister && !name)) {
-      setError('Harap isi semua kolom yang wajib diisi.');
-      return;
+    if (isRegister) {
+      const nameVal = validateName(name);
+      if (!nameVal.isValid) {
+        setError(nameVal.error);
+        return;
+      }
+      const emailVal = validateEmail(email);
+      if (!emailVal.isValid) {
+        setError(emailVal.error);
+        return;
+      }
+      const passVal = validatePassword(password, { isNew: true, confirmPassword });
+      if (!passVal.isValid) {
+        setError(passVal.error);
+        return;
+      }
+    } else {
+      const emailVal = validateEmail(email);
+      if (!emailVal.isValid) {
+        setError(emailVal.error);
+        return;
+      }
+      const passVal = validatePassword(password, { isNew: false });
+      if (!passVal.isValid) {
+        setError(passVal.error);
+        return;
+      }
     }
-    if (password.length < 6) {
-      setError('Password minimal 6 karakter.');
-      return;
-    }
+
     if (!captchaToken) {
       setError('Silakan selesaikan verifikasi Cloudflare terlebih dahulu.');
       return;
@@ -132,9 +156,9 @@ function LoginContent() {
     try {
       let result;
       if (isRegister) {
-        result = await register(role, email, password, name, captchaToken);
+        result = await register(role, email.trim().toLowerCase(), password, name.trim(), captchaToken);
       } else {
-        result = await login(role, email, password, captchaToken);
+        result = await login(role, email.trim().toLowerCase(), password, captchaToken);
       }
 
       if (!result.success) {
@@ -146,6 +170,8 @@ function LoginContent() {
       if (result.requireVerification) {
         setSuccessMsg(result.message);
         setIsRegister(false);
+        setPassword('');
+        setConfirmPassword('');
         triggerCaptchaReset();
         return;
       }
@@ -166,8 +192,9 @@ function LoginContent() {
     setError('');
     setSuccessMsg('');
 
-    if (!resetEmail) {
-      setError('Masukkan alamat email akun Anda.');
+    const emailVal = validateEmail(resetEmail);
+    if (!emailVal.isValid) {
+      setError(emailVal.error);
       return;
     }
     if (!captchaToken) {
@@ -287,6 +314,7 @@ function LoginContent() {
                     type="email"
                     className="input-field"
                     placeholder="nama@email.com"
+                    maxLength={100}
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     autoComplete="email"
@@ -380,6 +408,7 @@ function LoginContent() {
                   type="text"
                   className="input-field"
                   placeholder="Contoh: Budi Santoso"
+                  maxLength={70}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   autoComplete="name"
@@ -396,6 +425,7 @@ function LoginContent() {
                 type="email"
                 className="input-field"
                 placeholder="nama@email.com"
+                maxLength={100}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
@@ -422,7 +452,8 @@ function LoginContent() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   className="input-field pr-12"
-                  placeholder={isRegister ? 'Min. 6 karakter' : '••••••••'}
+                  placeholder={isRegister ? 'Min. 8 karakter (huruf & angka)' : '••••••••'}
+                  maxLength={72}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete={isRegister ? 'new-password' : 'current-password'}
@@ -444,7 +475,70 @@ function LoginContent() {
                   )}
                 </button>
               </div>
+
+              {/* Password strength meter for registration */}
+              {isRegister && password && (
+                <div className="mt-2.5 space-y-1.5 animate-fade-in">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-400">Kekuatan Sandi:</span>
+                    <span className={`font-bold ${getPasswordStrength(password).color}`}>
+                      {getPasswordStrength(password).label}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${getPasswordStrength(password).barColor}`}
+                      style={{ width: `${(getPasswordStrength(password).score / 3) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400">
+                    Wajib min. 8 karakter dan kombinasi huruf serta angka.
+                  </p>
+                </div>
+              )}
             </div>
+
+            {/* Confirm Password (register only) */}
+            {isRegister && (
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">
+                  Konfirmasi Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    className="input-field pr-12"
+                    placeholder="Ketik ulang password"
+                    maxLength={72}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="text-[11px] text-red-400 mt-1 font-medium">⚠️ Konfirmasi password belum cocok.</p>
+                )}
+                {confirmPassword && password === confirmPassword && (
+                  <p className="text-[11px] text-emerald-400 mt-1 font-medium">✓ Password cocok.</p>
+                )}
+              </div>
+            )}
 
             {/* Cloudflare Turnstile CAPTCHA */}
             <CloudflareTurnstile
@@ -496,6 +590,7 @@ function LoginContent() {
                   setIsRegister(!isRegister);
                   setError('');
                   setSuccessMsg('');
+                  setConfirmPassword('');
                   triggerCaptchaReset();
                 }}
                 className="text-blue-400 hover:text-blue-300 font-bold transition-colors"

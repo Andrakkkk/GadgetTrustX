@@ -3,6 +3,7 @@ import { getSupabasePassword } from '@/lib/authPassword';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createPublicClient } from '@/lib/supabase/public';
 import { getRequestIp, verifyTurnstileToken } from '@/lib/verifyTurnstile';
+import { validateEmail, validatePassword, validateName } from '@/utils/validation';
 
 const allowedRoles = new Set(['buyer', 'seller']);
 
@@ -10,17 +11,25 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const role = allowedRoles.has(body.role) ? body.role : 'buyer';
-    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
-    const password = typeof body.password === 'string' ? body.password : '';
-    const name = typeof body.name === 'string' ? body.name.trim() : '';
 
-    if (!email || !password || !name) {
-      return NextResponse.json({ error: 'Nama, email, dan password wajib diisi.' }, { status: 400 });
+    const nameVal = validateName(body.name);
+    if (!nameVal.isValid) {
+      return NextResponse.json({ error: nameVal.error }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Password minimal 6 karakter.' }, { status: 400 });
+    const emailVal = validateEmail(body.email);
+    if (!emailVal.isValid) {
+      return NextResponse.json({ error: emailVal.error }, { status: 400 });
     }
+
+    const passVal = validatePassword(body.password, { isNew: true });
+    if (!passVal.isValid) {
+      return NextResponse.json({ error: passVal.error }, { status: 400 });
+    }
+
+    const name = nameVal.sanitized;
+    const email = emailVal.sanitized;
+    const password = body.password;
 
     const captchaResult = await verifyTurnstileToken(body.captchaToken, getRequestIp(request));
     if (!captchaResult.success) {

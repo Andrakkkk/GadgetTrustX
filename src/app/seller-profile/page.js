@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/api-client';
 import TrackingModal from '@/components/TrackingModal';
 import AddressPicker from '@/components/AddressPicker';
 import OrderDetailModal from '@/components/OrderDetailModal';
+import { validatePhone, validateName, sanitizePhone } from '@/utils/validation';
 
 export default function SellerProfilePage() {
   const { user, isLoading, updateProfile } = useAuth();
@@ -168,6 +169,20 @@ export default function SellerProfilePage() {
   const handleProfileSave = async (e) => {
     e.preventDefault();
     if (!user) return;
+
+    if (profileForm.storeName && profileForm.storeName.trim().length > 50) {
+      alert('Gagal: Nama toko maksimal 50 karakter.');
+      return;
+    }
+
+    if (profileForm.phone) {
+      const phoneVal = validatePhone(profileForm.phone);
+      if (!phoneVal.isValid) {
+        alert(`Gagal: ${phoneVal.error}`);
+        return;
+      }
+    }
+
     setSavingProfile(true);
     let avatarUrl = user?.avatar || null;
     const fileInput = e.target.elements.avatarFile;
@@ -1356,11 +1371,27 @@ export default function SellerProfilePage() {
                           </div>
                           <div>
                              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Nama Toko</label>
-                             <input type="text" className="input-field" value={profileForm.storeName} onChange={e => setProfileForm({...profileForm, storeName: e.target.value})} />
+                             <input
+                               type="text"
+                               maxLength={50}
+                               placeholder="Nama Toko Anda"
+                               className="input-field"
+                               value={profileForm.storeName}
+                               onChange={e => setProfileForm({...profileForm, storeName: e.target.value})}
+                             />
                           </div>
                           <div>
-                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Nomor Publik (WA)</label>
-                             <input type="text" className="input-field" value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} />
+                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Nomor Publik / WA (Wajib Angka)</label>
+                             <input
+                               type="tel"
+                               inputMode="numeric"
+                               maxLength={15}
+                               placeholder="Contoh: 081234567890"
+                               className="input-field font-mono"
+                               value={profileForm.phone}
+                               onChange={e => setProfileForm({...profileForm, phone: sanitizePhone(e.target.value)})}
+                             />
+                             <p className="text-[10px] text-slate-500 mt-1">Hanya angka (10-15 digit, diawali 08...)</p>
                           </div>
                           <div className="md:col-span-2">
                               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">
@@ -1371,7 +1402,14 @@ export default function SellerProfilePage() {
                            </div>
                            <div className="md:col-span-2">
                               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Store Bio</label>
-                              <textarea rows="3" className="input-field !py-4" value={profileForm.bio} onChange={e => setProfileForm({...profileForm, bio: e.target.value})} placeholder="Ceritakan hal yang membuat toko Anda spesial..."></textarea>
+                              <textarea
+                                rows="3"
+                                maxLength={500}
+                                className="input-field !py-4"
+                                value={profileForm.bio}
+                                onChange={e => setProfileForm({...profileForm, bio: e.target.value})}
+                                placeholder="Ceritakan hal yang membuat toko Anda spesial (maks 500 karakter)..."
+                              ></textarea>
                            </div>
                        </div>
                        
