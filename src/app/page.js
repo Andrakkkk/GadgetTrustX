@@ -180,8 +180,8 @@ export default function Home() {
         </div>
 
         {/* Overlays */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#020817]/98 via-[#020817]/85 to-[#020817]/50" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#020817] via-transparent to-[#020817]/60" />
+        <div className="hero-overlay-horizontal absolute inset-0 -z-10 bg-gradient-to-r from-[#020817]/98 via-[#020817]/85 to-[#020817]/50" />
+        <div className="hero-overlay-vertical absolute inset-0 -z-10 bg-gradient-to-t from-[#020817] via-transparent to-[#020817]/60" />
 
         {/* Orbs */}
         <div className="orb absolute top-1/3 left-1/4 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-blue-600/8 animate-pulse-glow" />

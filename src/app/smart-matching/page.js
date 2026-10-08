@@ -133,9 +133,8 @@ export default function SmartMatchingPage() {
 
         {step < 4 ? (
           <div className="max-w-3xl mx-auto relative">
-            <div className="glass-panel p-1 md:p-1 overflow-hidden">
-               <div className="p-4 sm:p-8 md:p-12 bg-slate-950/60 rounded-[calc(1.5rem-4px)]">
-                  {/* Premium Stepper */}
+            <div className="glass-panel p-4 sm:p-8 md:p-12">
+              {/* Premium Stepper */}
                   <div className="flex mb-12 items-center justify-center gap-4">
                     {[1, 2, 3].map(i => (
                       <div key={i} className="flex items-center">
@@ -234,7 +233,6 @@ export default function SmartMatchingPage() {
                     </div>
                   )}
                </div>
-            </div>
           </div>
         ) : (
           <div className="animate-fade-in">
