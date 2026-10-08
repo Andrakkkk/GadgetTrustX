@@ -17,7 +17,14 @@ export default function MarketplacePage() {
   const { user } = useAuth();
   const [devices, setDevices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({ ram: '', storage: '', brand: '' });
+  const [filters, setFilters] = useState({
+    ram: '',
+    storage: '',
+    brand: '',
+    condition: '', // '' | 'baru' | 'bekas'
+    minPrice: '',
+    maxPrice: '',
+  });
   const [sortBy, setSortBy] = useState('latest');
   const [catalogPage, setCatalogPage] = useState(1);
   const [showCatalog, setShowCatalog] = useState(false);
@@ -105,7 +112,27 @@ export default function MarketplacePage() {
       const matchRam = filters.ram ? device.ram === filters.ram : true;
       const matchStorage = filters.storage ? device.storage === filters.storage : true;
       const matchBrand = filters.brand ? device.brand === filters.brand : true;
-      return matchSearch && matchRam && matchStorage && matchBrand;
+
+      // Filter Kondisi (Baru vs Bekas)
+      let matchCondition = true;
+      if (filters.condition === 'baru') {
+        const cond = (device.condition || '').toLowerCase();
+        matchCondition = cond.includes('brand new') || cond.includes('baru') || cond.includes('bnib') || cond === 'new';
+      } else if (filters.condition === 'bekas') {
+        const cond = (device.condition || '').toLowerCase();
+        matchCondition = !cond.includes('brand new') && !cond.includes('baru') && !cond.includes('bnib') && cond !== 'new';
+      }
+
+      // Filter Rentang Harga
+      const price = Number(device.price) || 0;
+      const matchMinPrice = filters.minPrice !== '' && !isNaN(Number(filters.minPrice))
+        ? price >= Number(filters.minPrice)
+        : true;
+      const matchMaxPrice = filters.maxPrice !== '' && !isNaN(Number(filters.maxPrice))
+        ? price <= Number(filters.maxPrice)
+        : true;
+
+      return matchSearch && matchRam && matchStorage && matchBrand && matchCondition && matchMinPrice && matchMaxPrice;
     });
     if (sortBy === 'price-low') result.sort((a, b) => a.price - b.price);
     else if (sortBy === 'price-high') result.sort((a, b) => b.price - a.price);
@@ -115,6 +142,23 @@ export default function MarketplacePage() {
 
   const toggleFilter = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: prev[key] === value ? '' : value }));
+  };
+
+  const handlePricePreset = (presetMin, presetMax) => {
+    const isCurrent = String(filters.minPrice) === String(presetMin) && String(filters.maxPrice) === String(presetMax);
+    if (isCurrent) {
+      setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '' }));
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        minPrice: presetMin !== '' ? String(presetMin) : '',
+        maxPrice: presetMax !== '' ? String(presetMax) : '',
+      }));
+    }
+  };
+
+  const resetFilters = () => {
+    setFilters({ ram: '', storage: '', brand: '', condition: '', minPrice: '', maxPrice: '' });
   };
 
   const handleExplore = () => {
@@ -384,19 +428,108 @@ export default function MarketplacePage() {
                     </h3>
                     {Object.values(filters).some(v => v !== '') && (
                       <button
-                        onClick={() => setFilters({ ram: '', storage: '', brand: '' })}
+                        onClick={resetFilters}
                         className="text-[10px] font-black uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors"
                       >
-                        Reset
+                        Reset Semua
                       </button>
                     )}
+                  </div>
+
+                  {/* Rentang Harga (Price Range) */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2.5">
+                      <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Rentang Harga</p>
+                      {(filters.minPrice || filters.maxPrice) && (
+                        <button
+                          onClick={() => setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '' }))}
+                          className="text-[9px] font-bold text-red-400 hover:text-red-300"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    {/* Presets */}
+                    <div className="grid grid-cols-2 gap-1.5 mb-2.5">
+                      {[
+                        { label: '< Rp 5 Jt', min: '', max: '5000000' },
+                        { label: '5 - 10 Jt', min: '5000000', max: '10000000' },
+                        { label: '10 - 20 Jt', min: '10000000', max: '20000000' },
+                        { label: '> Rp 20 Jt', min: '20000000', max: '' },
+                      ].map((p, idx) => {
+                        const isActive = String(filters.minPrice) === p.min && String(filters.maxPrice) === p.max;
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handlePricePreset(p.min, p.max)}
+                            className={`text-[10px] py-1.5 px-1 rounded-lg border font-bold transition-all text-center ${
+                              isActive
+                                ? 'bg-blue-600/25 border-blue-500/60 text-blue-300 shadow-sm'
+                                : 'border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-slate-200'
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Input manual Min & Max */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[9px] font-bold text-slate-500 block mb-1">Min (Rp)</span>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={filters.minPrice}
+                          onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))}
+                          className="w-full bg-[#0a0f1e] border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-bold text-slate-500 block mb-1">Maks (Rp)</span>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="Tak hingga"
+                          value={filters.maxPrice}
+                          onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
+                          className="w-full bg-[#0a0f1e] border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Kondisi Perangkat (Condition) */}
+                  <div>
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2.5">Kondisi</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[
+                        { key: 'baru', label: 'Baru (BNIB)' },
+                        { key: 'bekas', label: 'Bekas (Second)' },
+                      ].map(c => (
+                        <button
+                          key={c.key}
+                          type="button"
+                          onClick={() => toggleFilter('condition', c.key)}
+                          className={`text-[11px] py-2 rounded-xl border font-bold transition-all text-center ${
+                            filters.condition === c.key
+                              ? 'bg-amber-600/20 border-amber-500/50 text-amber-400'
+                              : 'border-white/[0.06] text-slate-500 hover:border-white/10 hover:text-slate-300'
+                          }`}
+                        >
+                          {c.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Brand */}
                   <div>
                     <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-3">Brand</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {['Apple', 'Samsung', 'Google', 'Xiaomi', 'Oppo', 'Asus', 'Other'].map(b => (
+                      {['Apple', 'Samsung', 'Google', 'Xiaomi', 'Oppo', 'Vivo', 'Asus', 'Other'].map(b => (
                         <button
                           key={b}
                           onClick={() => toggleFilter('brand', b)}
@@ -415,8 +548,8 @@ export default function MarketplacePage() {
                   {/* RAM */}
                   <div>
                     <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-3">RAM</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {['8GB', '12GB', '16GB', '24GB'].map(r => (
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {['4GB', '6GB', '8GB', '12GB', '16GB', '24GB'].map(r => (
                         <button
                           key={r}
                           onClick={() => toggleFilter('ram', r)}
@@ -436,7 +569,7 @@ export default function MarketplacePage() {
                   <div>
                     <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-3">Storage</p>
                     <div className="grid grid-cols-2 gap-1.5">
-                      {['128GB', '256GB', '512GB', '1TB'].map(s => (
+                      {['64GB', '128GB', '256GB', '512GB', '1TB'].map(s => (
                         <button
                           key={s}
                           onClick={() => toggleFilter('storage', s)}
@@ -472,7 +605,7 @@ export default function MarketplacePage() {
             {/* ── Product Grid ── */}
             <div className="flex-1 min-w-0">
               {/* Sort bar */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-slate-500">
                   Menampilkan <span className="text-white font-bold">{filteredDevices.length}</span> produk
                 </p>
@@ -489,6 +622,55 @@ export default function MarketplacePage() {
                   </select>
                 </div>
               </div>
+
+              {/* Active filter badges */}
+              {(Object.entries(filters).some(([_, v]) => v !== '') || searchTerm) && (
+                <div className="flex flex-wrap items-center gap-1.5 mb-5 p-3 rounded-2xl bg-[#0d1117] border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mr-1">Filter Aktif:</span>
+                  {searchTerm && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-semibold">
+                      Kata kunci: &quot;{searchTerm}&quot;
+                      <button onClick={() => setSearchTerm('')} className="hover:text-white cursor-pointer" title="Hapus pencarian">✕</button>
+                    </span>
+                  )}
+                  {filters.brand && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+                      Brand: {filters.brand}
+                      <button onClick={() => toggleFilter('brand', filters.brand)} className="hover:text-white cursor-pointer" title="Hapus filter brand">✕</button>
+                    </span>
+                  )}
+                  {filters.condition && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold">
+                      Kondisi: {filters.condition === 'baru' ? 'Baru (BNIB)' : 'Bekas (Second)'}
+                      <button onClick={() => toggleFilter('condition', filters.condition)} className="hover:text-white cursor-pointer" title="Hapus filter kondisi">✕</button>
+                    </span>
+                  )}
+                  {filters.ram && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-semibold">
+                      RAM: {filters.ram}
+                      <button onClick={() => toggleFilter('ram', filters.ram)} className="hover:text-white cursor-pointer" title="Hapus filter RAM">✕</button>
+                    </span>
+                  )}
+                  {filters.storage && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                      Storage: {filters.storage}
+                      <button onClick={() => toggleFilter('storage', filters.storage)} className="hover:text-white cursor-pointer" title="Hapus filter storage">✕</button>
+                    </span>
+                  )}
+                  {(filters.minPrice || filters.maxPrice) && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold">
+                      Harga: {filters.minPrice ? formatPrice(Number(filters.minPrice)) : 'Rp 0'} - {filters.maxPrice ? formatPrice(Number(filters.maxPrice)) : 'Tak hingga'}
+                      <button onClick={() => setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '' }))} className="hover:text-white cursor-pointer" title="Hapus filter harga">✕</button>
+                    </span>
+                  )}
+                  <button
+                    onClick={() => { resetFilters(); setSearchTerm(''); }}
+                    className="text-xs text-red-400 hover:text-red-300 ml-auto cursor-pointer font-bold transition-colors"
+                  >
+                    Reset Semua
+                  </button>
+                </div>
+              )}
 
               {filteredDevices.length > 0 ? (
                 (() => {
@@ -549,7 +731,7 @@ export default function MarketplacePage() {
                   <h3 className="text-xl font-bold text-white mb-2">Tidak ada produk ditemukan</h3>
                   <p className="text-slate-500 text-sm mb-6">Coba ubah kata kunci atau reset filter yang dipilih.</p>
                   <button
-                    onClick={() => { setSearchTerm(''); setFilters({ ram: '', storage: '', brand: '' }); }}
+                    onClick={() => { setSearchTerm(''); resetFilters(); }}
                     className="btn-secondary !py-2.5 !px-6 !text-sm !rounded-xl"
                   >
                     Reset semua filter
