@@ -189,7 +189,7 @@ export default function Home() {
 
         {/* Grid texture */}
         <div
-          className="absolute inset-0 -z-10 opacity-[0.03]"
+          className="hero-grid-pattern absolute inset-0 -z-10 opacity-[0.03]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }}
         />
 
@@ -383,7 +383,7 @@ export default function Home() {
       {/* ===================== CTA BANNER ===================== */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <div className="relative rounded-3xl overflow-hidden p-12 text-center border border-white/[0.08]"
+          <div className="cta-banner-card relative rounded-3xl overflow-hidden p-12 text-center border border-white/[0.08]"
             style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(139,92,246,0.08) 50%, rgba(16,185,129,0.06) 100%)' }}
           >
             {/* Orbs inside card */}

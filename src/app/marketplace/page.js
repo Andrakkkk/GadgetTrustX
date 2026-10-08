@@ -250,7 +250,7 @@ export default function MarketplacePage() {
               <button
                 key={i}
                 onClick={() => setFeaturedIndex(i)}
-                className={`h-1 sm:h-1.5 rounded-full transition-all duration-300 ${featuredIndex === i ? 'w-6 sm:w-8 bg-blue-500' : 'w-1 sm:w-1.5 bg-white/20 hover:bg-white/40'}`}
+                className={`h-1 sm:h-1.5 rounded-full transition-all duration-300 ${featuredIndex === i ? 'w-6 sm:w-8 bg-blue-500' : 'featured-dot-inactive w-1 sm:w-1.5 bg-white/20 hover:bg-white/40'}`}
               />
             ))}
           </div>
@@ -267,7 +267,7 @@ export default function MarketplacePage() {
               return (
               <div
                 key={`${item.id}-${idx}`}
-                className="group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-[#0d1117] border border-white/[0.08] hover:border-blue-500/30 transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_30px_rgba(59,130,246,0.15)] min-h-[220px] sm:min-h-0 sm:aspect-[4/3] flex flex-col justify-between"
+                className="featured-card group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-[#0d1117] border border-white/[0.08] hover:border-blue-500/30 transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-[0_24px_60px_rgba(0,0,0,0.7),0_0_30px_rgba(59,130,246,0.15)] min-h-[220px] sm:min-h-0 sm:aspect-[4/3] flex flex-col justify-between"
               >
                 {/* Smart Adaptive Background Image */}
                 <div className="absolute inset-0 overflow-hidden">
@@ -277,7 +277,7 @@ export default function MarketplacePage() {
                       <img
                         src={item.image}
                         alt=""
-                        className="w-full h-full object-cover object-center blur-2xl opacity-35 scale-125 pointer-events-none group-hover:scale-140 transition-transform duration-700"
+                        className="featured-ambient-blur w-full h-full object-cover object-center blur-2xl opacity-35 scale-125 pointer-events-none group-hover:scale-140 transition-transform duration-700"
                       />
                       {/* Crisp uncropped product in foreground */}
                       <div className="absolute inset-0 p-2 pt-6 pb-14 sm:p-6 sm:pt-12 sm:pb-24 flex items-center justify-center pointer-events-none">
@@ -296,13 +296,13 @@ export default function MarketplacePage() {
                       className="w-full h-full object-cover object-center opacity-60 group-hover:opacity-70 transition-opacity duration-500"
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d1117]/95 via-[#0d1117]/40 to-transparent pointer-events-none" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0d1117]/60 to-transparent pointer-events-none" />
+                  <div className="featured-overlay-t absolute inset-0 bg-gradient-to-t from-[#0d1117]/95 via-[#0d1117]/40 to-transparent pointer-events-none" />
+                  <div className="featured-overlay-r absolute inset-0 bg-gradient-to-r from-[#0d1117]/60 to-transparent pointer-events-none" />
                 </div>
 
                 {/* Top bar */}
                 <div className="relative z-10 p-2.5 sm:p-7 flex justify-between items-start">
-                  <div className={`flex items-center gap-1.5 border rounded-full px-2 py-0.5 sm:px-3 sm:py-1.5 backdrop-blur-md ${inStock ? 'bg-black/40 border-white/10' : 'bg-red-500/10 border-red-500/30'}`}>
+                  <div className={`featured-stock-pill flex items-center gap-1.5 border rounded-full px-2 py-0.5 sm:px-3 sm:py-1.5 backdrop-blur-md ${inStock ? 'bg-black/40 border-white/10' : 'bg-red-500/10 border-red-500/30'}`}>
                     <span className="relative flex h-1.5 w-1.5">
                       {inStock ? (
                         <>
@@ -326,10 +326,10 @@ export default function MarketplacePage() {
                     <span className="h-1 w-1 rounded-full bg-white/20" />
                     <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 uppercase">{item.brand}</span>
                   </div>
-                  <h3 className="text-xs sm:text-2xl font-black text-white mb-0.5 sm:mb-2 leading-snug group-hover:text-blue-300 transition-colors line-clamp-1">
+                  <h3 className="featured-card-title text-xs sm:text-2xl font-black text-white mb-0.5 sm:mb-2 leading-snug group-hover:text-blue-300 transition-colors line-clamp-1">
                     {item.name}
                   </h3>
-                  <p className="text-[9px] sm:text-xs text-slate-400 mb-2 font-medium line-clamp-1">
+                  <p className="featured-card-specs text-[9px] sm:text-xs text-slate-400 mb-2 font-medium line-clamp-1">
                     {item.ram && item.ram !== '-' ? `RAM ${item.ram}` : ''}
                     {item.ram && item.ram !== '-' && item.storage ? ' • ' : ''}
                     {item.storage ? `${item.storage}` : ''}
@@ -338,7 +338,7 @@ export default function MarketplacePage() {
                   <div className="flex items-end justify-between gap-1 sm:gap-2">
                     <div>
                       <p className="text-[8px] sm:text-xs text-slate-500 mb-0.5">Mulai dari</p>
-                      <p className="text-xs sm:text-3xl font-black text-white">{formatPrice(item.price)}</p>
+                      <p className="featured-card-price text-xs sm:text-3xl font-black text-white">{formatPrice(item.price)}</p>
                     </div>
                     <button
                       onClick={handleExplore}

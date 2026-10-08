@@ -162,32 +162,32 @@ export default function DeviceCard({ device }) {
   return (
     <div
       onClick={() => router.push(`/product/${device.id}`)}
-      className="group relative flex flex-col bg-[#0d1117] rounded-xl sm:rounded-2xl border border-white/[0.07] overflow-hidden cursor-pointer transition-all duration-400 hover:-translate-y-1 hover:border-purple-500/40 hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)]"
+      className="catalog-device-card group relative flex flex-col bg-[#0d1117] rounded-xl sm:rounded-2xl border border-white/[0.07] overflow-hidden cursor-pointer transition-all duration-400 hover:-translate-y-1 hover:border-purple-500/40 hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)]"
     >
       {/* Image */}
-      <div className="relative h-24 sm:h-52 overflow-hidden bg-[#0a0f1a] flex-shrink-0 flex items-center justify-center">
+      <div className="catalog-image-box relative h-24 sm:h-52 overflow-hidden bg-[#0a0f1a] flex-shrink-0 flex items-center justify-center">
         <img
           src={device.image}
           alt={device.name}
           className="w-full h-full object-contain p-1 sm:p-2.5 transition-transform duration-500 group-hover:scale-105"
         />
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0d1117]/80 via-transparent to-transparent" />
+        <div className="catalog-image-overlay absolute inset-0 bg-gradient-to-t from-[#0d1117]/80 via-transparent to-transparent" />
 
         {/* Top badges */}
         <div className="absolute top-1 left-1 sm:top-3 sm:left-3 flex flex-wrap items-center gap-0.5 sm:gap-1.5 z-10">
           {device.verifiedByTrustX && (
-            <span className="flex items-center gap-0.5 bg-[#090d14]/90 backdrop-blur-md border border-emerald-500/35 text-emerald-400 text-[7px] sm:text-[9px] font-black uppercase tracking-wider px-1 py-0.2 sm:px-2.5 sm:py-0.5 rounded sm:rounded-lg shadow-md">
+            <span className="catalog-badge-trustx flex items-center gap-0.5 bg-[#090d14]/90 backdrop-blur-md border border-emerald-500/35 text-emerald-400 text-[7px] sm:text-[9px] font-black uppercase tracking-wider px-1 py-0.2 sm:px-2.5 sm:py-0.5 rounded sm:rounded-lg shadow-md">
               TRUSTX
             </span>
           )}
           {sellerBadgesList.includes('Official Store') && (
-            <span className="bg-[#090d14]/90 backdrop-blur-md border border-purple-500/35 text-purple-300 text-[7px] sm:text-[9px] font-black uppercase tracking-wider px-1 py-0.2 sm:px-2.5 sm:py-0.5 rounded sm:rounded-lg shadow-md">
+            <span className="catalog-badge-official bg-[#090d14]/90 backdrop-blur-md border border-purple-500/35 text-purple-300 text-[7px] sm:text-[9px] font-black uppercase tracking-wider px-1 py-0.2 sm:px-2.5 sm:py-0.5 rounded sm:rounded-lg shadow-md">
               OFFICIAL
             </span>
           )}
           {isBrandNew && (
-            <span className="bg-[#090d14]/90 backdrop-blur-md border border-blue-500/35 text-blue-400 text-[7px] sm:text-[9px] font-black uppercase tracking-wider px-1 py-0.2 sm:px-2.5 sm:py-0.5 rounded sm:rounded-lg shadow-md">
+            <span className="catalog-badge-bnib bg-[#090d14]/90 backdrop-blur-md border border-blue-500/35 text-blue-400 text-[7px] sm:text-[9px] font-black uppercase tracking-wider px-1 py-0.2 sm:px-2.5 sm:py-0.5 rounded sm:rounded-lg shadow-md">
               BNIB
             </span>
           )}
@@ -217,7 +217,7 @@ export default function DeviceCard({ device }) {
         {/* Device rating bottom left (Only if reviews exist for this device) */}
         {deviceRating !== null && (
           <div className="absolute bottom-1 left-1 sm:bottom-3 sm:left-3">
-            <div className="flex items-center gap-0.5 bg-black/60 backdrop-blur-md px-1 py-0.2 sm:px-2 sm:py-1 rounded sm:rounded-lg border border-white/10 shadow-lg">
+            <div className="catalog-rating-chip flex items-center gap-0.5 bg-black/60 backdrop-blur-md px-1 py-0.2 sm:px-2 sm:py-1 rounded sm:rounded-lg border border-white/10 shadow-lg">
               <svg className="w-2 h-2 sm:w-3 sm:h-3 text-amber-400 fill-current" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
               </svg>
@@ -232,7 +232,7 @@ export default function DeviceCard({ device }) {
         {/* Brand + Name */}
         <div className="mb-1 sm:mb-3">
           <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-wider text-blue-400 mb-0.5">{device.brand}</p>
-          <h3 className="text-[10px] sm:text-base font-bold text-white leading-snug group-hover:text-purple-300 transition-colors line-clamp-2">
+          <h3 className="catalog-device-title text-[10px] sm:text-base font-bold text-white leading-snug group-hover:text-purple-300 transition-colors line-clamp-2">
             {device.name}
           </h3>
         </div>
@@ -240,17 +240,17 @@ export default function DeviceCard({ device }) {
         {/* Spec chips */}
         <div className="flex flex-wrap gap-0.5 sm:gap-1.5 mb-1.5 sm:mb-4">
           {device.ram && (
-            <span className="text-[7px] sm:text-[10px] font-bold text-slate-400 bg-white/[0.04] border border-white/[0.07] px-1 py-0.2 sm:px-2 sm:py-1 rounded sm:rounded-lg">
+            <span className="catalog-spec-chip text-[7px] sm:text-[10px] font-bold text-slate-400 bg-white/[0.04] border border-white/[0.07] px-1 py-0.2 sm:px-2 sm:py-1 rounded sm:rounded-lg">
               {device.ram}
             </span>
           )}
           {device.storage && (
-            <span className="text-[7px] sm:text-[10px] font-bold text-slate-400 bg-white/[0.04] border border-white/[0.07] px-1 py-0.2 sm:px-2 sm:py-1 rounded sm:rounded-lg">
+            <span className="catalog-spec-chip text-[7px] sm:text-[10px] font-bold text-slate-400 bg-white/[0.04] border border-white/[0.07] px-1 py-0.2 sm:px-2 sm:py-1 rounded sm:rounded-lg">
               {device.storage}
             </span>
           )}
           {device.condition && (
-            <span className="text-[7px] sm:text-[10px] font-bold text-slate-400 bg-white/[0.04] border border-white/[0.07] px-1 py-0.2 sm:px-2 sm:py-1 rounded sm:rounded-lg hidden sm:inline">
+            <span className="catalog-spec-chip text-[7px] sm:text-[10px] font-bold text-slate-400 bg-white/[0.04] border border-white/[0.07] px-1 py-0.2 sm:px-2 sm:py-1 rounded sm:rounded-lg hidden sm:inline">
               {device.condition}
             </span>
           )}
@@ -258,7 +258,7 @@ export default function DeviceCard({ device }) {
 
         {/* Price */}
         <div className="flex items-baseline gap-1 mb-1.5 sm:mb-4">
-          <span className="text-xs sm:text-xl font-black text-white">{formatPrice(device.price)}</span>
+          <span className="catalog-device-price text-xs sm:text-xl font-black text-white">{formatPrice(device.price)}</span>
           {device.originalPrice && (
             <span className="text-[9px] sm:text-sm text-slate-600 line-through font-medium hidden sm:inline">{formatPrice(device.originalPrice)}</span>
           )}
