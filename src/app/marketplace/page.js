@@ -21,10 +21,19 @@ export default function MarketplacePage() {
     ram: '',
     storage: '',
     brand: '',
-    condition: '', // '' | 'baru' | 'bekas'
     minPrice: '',
     maxPrice: '',
   });
+  const [openSections, setOpenSections] = useState({
+    price: true,
+    brand: true,
+    ram: true,
+    storage: true,
+  });
+
+  const toggleSection = (key) => {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
   const [sortBy, setSortBy] = useState('latest');
   const [catalogPage, setCatalogPage] = useState(1);
   const [showCatalog, setShowCatalog] = useState(false);
@@ -113,16 +122,6 @@ export default function MarketplacePage() {
       const matchStorage = filters.storage ? device.storage === filters.storage : true;
       const matchBrand = filters.brand ? device.brand === filters.brand : true;
 
-      // Filter Kondisi (Baru vs Bekas)
-      let matchCondition = true;
-      if (filters.condition === 'baru') {
-        const cond = (device.condition || '').toLowerCase();
-        matchCondition = cond.includes('brand new') || cond.includes('baru') || cond.includes('bnib') || cond === 'new';
-      } else if (filters.condition === 'bekas') {
-        const cond = (device.condition || '').toLowerCase();
-        matchCondition = !cond.includes('brand new') && !cond.includes('baru') && !cond.includes('bnib') && cond !== 'new';
-      }
-
       // Filter Rentang Harga
       const price = Number(device.price) || 0;
       const matchMinPrice = filters.minPrice !== '' && !isNaN(Number(filters.minPrice))
@@ -132,7 +131,7 @@ export default function MarketplacePage() {
         ? price <= Number(filters.maxPrice)
         : true;
 
-      return matchSearch && matchRam && matchStorage && matchBrand && matchCondition && matchMinPrice && matchMaxPrice;
+      return matchSearch && matchRam && matchStorage && matchBrand && matchMinPrice && matchMaxPrice;
     });
     if (sortBy === 'price-low') result.sort((a, b) => a.price - b.price);
     else if (sortBy === 'price-high') result.sort((a, b) => b.price - a.price);
@@ -158,7 +157,7 @@ export default function MarketplacePage() {
   };
 
   const resetFilters = () => {
-    setFilters({ ram: '', storage: '', brand: '', condition: '', minPrice: '', maxPrice: '' });
+    setFilters({ ram: '', storage: '', brand: '', minPrice: '', maxPrice: '' });
   };
 
   const handleExplore = () => {
@@ -418,171 +417,257 @@ export default function MarketplacePage() {
               </button>
 
               <div className={`${showMobileFilters ? 'block' : 'hidden'} lg:block space-y-4`}>
-                <div className="rounded-2xl bg-[#0d1117] border border-white/[0.08] p-5 space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black text-white flex items-center gap-2">
-                      <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
-                      </svg>
-                      Filter
-                    </h3>
+                <div className="rounded-2xl bg-[#0d1117] border border-white/[0.08] p-5 space-y-4 shadow-xl">
+                  {/* Top Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+                        </svg>
+                      </div>
+                      <h3 className="text-sm font-black text-white tracking-wide">
+                        Filter Katalog
+                      </h3>
+                    </div>
                     {Object.values(filters).some(v => v !== '') && (
                       <button
                         onClick={resetFilters}
-                        className="text-[10px] font-black uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors"
+                        className="text-[10px] font-black uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                       >
                         Reset Semua
                       </button>
                     )}
                   </div>
 
-                  {/* Rentang Harga (Price Range) */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2.5">
-                      <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Rentang Harga</p>
-                      {(filters.minPrice || filters.maxPrice) && (
-                        <button
-                          onClick={() => setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '' }))}
-                          className="text-[9px] font-bold text-red-400 hover:text-red-300"
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                    {/* Presets */}
-                    <div className="grid grid-cols-2 gap-1.5 mb-2.5">
-                      {[
-                        { label: '< Rp 5 Jt', min: '', max: '5000000' },
-                        { label: '5 - 10 Jt', min: '5000000', max: '10000000' },
-                        { label: '10 - 20 Jt', min: '10000000', max: '20000000' },
-                        { label: '> Rp 20 Jt', min: '20000000', max: '' },
-                      ].map((p, idx) => {
-                        const isActive = String(filters.minPrice) === p.min && String(filters.maxPrice) === p.max;
-                        return (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => handlePricePreset(p.min, p.max)}
-                            className={`text-[10px] py-1.5 px-1 rounded-lg border font-bold transition-all text-center ${
-                              isActive
-                                ? 'bg-blue-600/25 border-blue-500/60 text-blue-300 shadow-sm'
-                                : 'border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-slate-200'
-                            }`}
+                  {/* 1. Accordion Section: Rentang Harga */}
+                  <div className="border border-white/[0.06] rounded-xl bg-white/[0.01] overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('price')}
+                      className="w-full flex items-center justify-between px-3.5 py-3 text-left hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">💰</span>
+                        <span className="text-xs font-bold text-slate-200">Rentang Harga</span>
+                        {(filters.minPrice || filters.maxPrice) && (
+                          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {(filters.minPrice || filters.maxPrice) && (
+                          <span
+                            onClick={(e) => { e.stopPropagation(); setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '' })); }}
+                            className="text-[9px] font-bold text-red-400 hover:text-red-300 uppercase px-1 py-0.5 rounded cursor-pointer"
                           >
-                            {p.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {/* Input manual Min & Max */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-500 block mb-1">Min (Rp)</span>
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          value={filters.minPrice}
-                          onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))}
-                          className="w-full bg-[#0a0f1e] border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
-                        />
+                            Reset
+                          </span>
+                        )}
+                        <svg
+                          className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${openSections.price ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                       </div>
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-500 block mb-1">Maks (Rp)</span>
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="Tak hingga"
-                          value={filters.maxPrice}
-                          onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
-                          className="w-full bg-[#0a0f1e] border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
-                        />
+                    </button>
+                    {openSections.price && (
+                      <div className="p-3.5 pt-1 space-y-2.5 border-t border-white/[0.04]">
+                        {/* Preset Quick Chips */}
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {[
+                            { label: '< Rp 5 Jt', min: '', max: '5000000' },
+                            { label: '5 - 10 Jt', min: '5000000', max: '10000000' },
+                            { label: '10 - 20 Jt', min: '10000000', max: '20000000' },
+                            { label: '> Rp 20 Jt', min: '20000000', max: '' },
+                          ].map((p, idx) => {
+                            const isActive = String(filters.minPrice) === p.min && String(filters.maxPrice) === p.max;
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => handlePricePreset(p.min, p.max)}
+                                className={`text-[10px] py-1.5 px-1 rounded-lg border font-bold transition-all text-center cursor-pointer ${
+                                  isActive
+                                    ? 'bg-cyan-600/25 border-cyan-500/60 text-cyan-300 shadow-sm'
+                                    : 'border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-slate-200 hover:bg-white/[0.03]'
+                                }`}
+                              >
+                                {p.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {/* Custom Min / Max */}
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-500 block mb-1">Min (Rp)</span>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              value={filters.minPrice}
+                              onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))}
+                              className="w-full bg-[#0a0f1e] border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-500 block mb-1">Maks (Rp)</span>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="Tak hingga"
+                              value={filters.maxPrice}
+                              onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
+                              className="w-full bg-[#0a0f1e] border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
-                  {/* Kondisi Perangkat (Condition) */}
-                  <div>
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2.5">Kondisi</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {[
-                        { key: 'baru', label: 'Baru (BNIB)' },
-                        { key: 'bekas', label: 'Bekas (Second)' },
-                      ].map(c => (
-                        <button
-                          key={c.key}
-                          type="button"
-                          onClick={() => toggleFilter('condition', c.key)}
-                          className={`text-[11px] py-2 rounded-xl border font-bold transition-all text-center ${
-                            filters.condition === c.key
-                              ? 'bg-amber-600/20 border-amber-500/50 text-amber-400'
-                              : 'border-white/[0.06] text-slate-500 hover:border-white/10 hover:text-slate-300'
-                          }`}
-                        >
-                          {c.label}
-                        </button>
-                      ))}
-                    </div>
+                  {/* 2. Accordion Section: Brand */}
+                  <div className="border border-white/[0.06] rounded-xl bg-white/[0.01] overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('brand')}
+                      className="w-full flex items-center justify-between px-3.5 py-3 text-left hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">🏷️</span>
+                        <span className="text-xs font-bold text-slate-200">Brand</span>
+                        {filters.brand && (
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                            {filters.brand}
+                          </span>
+                        )}
+                      </div>
+                      <svg
+                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${openSections.brand ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {openSections.brand && (
+                      <div className="p-3.5 pt-1 border-t border-white/[0.04]">
+                        <div className="flex flex-wrap gap-1.5">
+                          {['Apple', 'Samsung', 'Google', 'Xiaomi', 'Oppo', 'Vivo', 'Asus', 'Other'].map(b => (
+                            <button
+                              key={b}
+                              type="button"
+                              onClick={() => toggleFilter('brand', b)}
+                              className={`text-[10px] px-3 py-1.5 rounded-lg border font-bold transition-all cursor-pointer ${
+                                filters.brand === b
+                                  ? 'bg-blue-600/25 border-blue-500/60 text-blue-300 shadow-sm'
+                                  : 'border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-slate-200 hover:bg-white/[0.03]'
+                              }`}
+                            >
+                              {b}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Brand */}
-                  <div>
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-3">Brand</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {['Apple', 'Samsung', 'Google', 'Xiaomi', 'Oppo', 'Vivo', 'Asus', 'Other'].map(b => (
-                        <button
-                          key={b}
-                          onClick={() => toggleFilter('brand', b)}
-                          className={`text-[10px] px-3 py-1.5 rounded-lg border font-bold transition-all ${
-                            filters.brand === b
-                              ? 'bg-blue-600/20 border-blue-500/50 text-blue-400'
-                              : 'border-white/[0.06] text-slate-500 hover:border-white/10 hover:text-slate-300'
-                          }`}
-                        >
-                          {b}
-                        </button>
-                      ))}
-                    </div>
+                  {/* 3. Accordion Section: RAM */}
+                  <div className="border border-white/[0.06] rounded-xl bg-white/[0.01] overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('ram')}
+                      className="w-full flex items-center justify-between px-3.5 py-3 text-left hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">⚡</span>
+                        <span className="text-xs font-bold text-slate-200">RAM</span>
+                        {filters.ram && (
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400">
+                            {filters.ram}
+                          </span>
+                        )}
+                      </div>
+                      <svg
+                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${openSections.ram ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {openSections.ram && (
+                      <div className="p-3.5 pt-1 border-t border-white/[0.04]">
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {['4GB', '6GB', '8GB', '12GB', '16GB', '24GB'].map(r => (
+                            <button
+                              key={r}
+                              type="button"
+                              onClick={() => toggleFilter('ram', r)}
+                              className={`text-[11px] py-1.5 rounded-lg border font-bold transition-all cursor-pointer ${
+                                filters.ram === r
+                                  ? 'bg-violet-600/25 border-violet-500/60 text-violet-300 shadow-sm'
+                                  : 'border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-slate-200 hover:bg-white/[0.03]'
+                              }`}
+                            >
+                              {r}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* RAM */}
-                  <div>
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-3">RAM</p>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {['4GB', '6GB', '8GB', '12GB', '16GB', '24GB'].map(r => (
-                        <button
-                          key={r}
-                          onClick={() => toggleFilter('ram', r)}
-                          className={`text-[11px] py-2 rounded-xl border font-bold transition-all ${
-                            filters.ram === r
-                              ? 'bg-violet-600/20 border-violet-500/50 text-violet-400'
-                              : 'border-white/[0.06] text-slate-500 hover:border-white/10 hover:text-slate-300'
-                          }`}
-                        >
-                          {r}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Storage */}
-                  <div>
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-3">Storage</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {['64GB', '128GB', '256GB', '512GB', '1TB'].map(s => (
-                        <button
-                          key={s}
-                          onClick={() => toggleFilter('storage', s)}
-                          className={`text-[11px] py-2 rounded-xl border font-bold transition-all ${
-                            filters.storage === s
-                              ? 'bg-emerald-600/20 border-emerald-500/50 text-emerald-400'
-                              : 'border-white/[0.06] text-slate-500 hover:border-white/10 hover:text-slate-300'
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
+                  {/* 4. Accordion Section: Internal Storage (with 2TB!) */}
+                  <div className="border border-white/[0.06] rounded-xl bg-white/[0.01] overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('storage')}
+                      className="w-full flex items-center justify-between px-3.5 py-3 text-left hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">💾</span>
+                        <span className="text-xs font-bold text-slate-200">Penyimpanan (Storage)</span>
+                        {filters.storage && (
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+                            {filters.storage}
+                          </span>
+                        )}
+                      </div>
+                      <svg
+                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${openSections.storage ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {openSections.storage && (
+                      <div className="p-3.5 pt-1 border-t border-white/[0.04]">
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {['64GB', '128GB', '256GB', '512GB', '1TB', '2TB'].map(s => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => toggleFilter('storage', s)}
+                              className={`text-[11px] py-1.5 rounded-lg border font-bold transition-all cursor-pointer ${
+                                filters.storage === s
+                                  ? 'bg-emerald-600/25 border-emerald-500/60 text-emerald-300 shadow-sm'
+                                  : 'border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-slate-200 hover:bg-white/[0.03]'
+                              }`}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -637,12 +722,6 @@ export default function MarketplacePage() {
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
                       Brand: {filters.brand}
                       <button onClick={() => toggleFilter('brand', filters.brand)} className="hover:text-white cursor-pointer" title="Hapus filter brand">✕</button>
-                    </span>
-                  )}
-                  {filters.condition && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold">
-                      Kondisi: {filters.condition === 'baru' ? 'Baru (BNIB)' : 'Bekas (Second)'}
-                      <button onClick={() => toggleFilter('condition', filters.condition)} className="hover:text-white cursor-pointer" title="Hapus filter kondisi">✕</button>
                     </span>
                   )}
                   {filters.ram && (
