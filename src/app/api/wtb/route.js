@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getRequestUser } from '@/lib/supabase/auth';
 import { buildDescriptionPayload, mapWtbRow } from '@/lib/supabase/commerce';
+import { validateWtbInput } from '@/utils/validation';
 
 const wtbSelect = `
   id,
@@ -36,13 +37,27 @@ export async function POST(request) {
   }
 
   const body = await request.json();
+  const validation = validateWtbInput({
+    device: body.device || body.title,
+    budget: body.budget,
+    condition: body.condition,
+    notes: body.notes,
+  });
+
+  if (!validation.isValid) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  const { device, budget, condition, notes } = validation.sanitized;
+  const payloadWithSanitized = { ...body, device, budget, condition, notes };
+
   const { data, error } = await result.supabase
     .from('wtb_listings')
     .insert({
       buyer_id: result.profile.id,
-      title: body.device,
-      budget: Number(body.budget),
-      description: buildDescriptionPayload(body),
+      title: device,
+      budget: budget,
+      description: buildDescriptionPayload(payloadWithSanitized),
     })
     .select(wtbSelect)
     .single();
@@ -61,12 +76,26 @@ export async function PATCH(request) {
   }
 
   const body = await request.json();
+  const validation = validateWtbInput({
+    device: body.device || body.title,
+    budget: body.budget,
+    condition: body.condition,
+    notes: body.notes,
+  });
+
+  if (!validation.isValid) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  const { device, budget, condition, notes } = validation.sanitized;
+  const payloadWithSanitized = { ...body, device, budget, condition, notes };
+
   const { data, error } = await result.supabase
     .from('wtb_listings')
     .update({
-      title: body.device,
-      budget: Number(body.budget),
-      description: buildDescriptionPayload(body),
+      title: device,
+      budget: budget,
+      description: buildDescriptionPayload(payloadWithSanitized),
     })
     .eq('id', body.id)
     .eq('buyer_id', result.profile.id)

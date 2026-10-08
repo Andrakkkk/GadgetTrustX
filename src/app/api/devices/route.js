@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { mapDeviceRow } from '@/lib/supabase/devices';
 import { getRequestUser } from '@/lib/supabase/auth';
+import { validateDeviceListingInput } from '@/utils/validation';
 
 const deviceSelect = `
   id,
@@ -60,6 +61,22 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Seller access required.' }, { status: 403 });
   }
 
+  const validation = validateDeviceListingInput({
+    name: body.name,
+    brand: body.brand,
+    category: body.category,
+    price: body.price,
+    stock: body.stock,
+    description: body.description,
+    chipset: body.chipset,
+  });
+
+  if (!validation.isValid) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  const { name, brand, category, price, stock, description, chipset } = validation.sanitized;
+
   const id = body.id || `dev_${Date.now()}`;
   const sellerId = result.profile.role === 'admin' && body.sellerId ? body.sellerId : result.profile.id;
 
@@ -68,17 +85,17 @@ export async function POST(request) {
     .insert({
       id,
       seller_id: sellerId,
-      name: body.name,
-      brand: body.brand,
-      category: body.category,
-      price: body.price,
-      stock: body.stock,
+      name,
+      brand,
+      category,
+      price,
+      stock,
       condition: body.condition || (isTradeIn ? 'Good' : 'Brand New'),
-      ram: body.ram,
-      storage: body.storage,
+      ram: body.ram || '8GB',
+      storage: body.storage || '256GB',
       battery_health: body.batteryHealth || body.battery_health || 90,
-      chipset: body.chipset,
-      description: body.description,
+      chipset,
+      description,
       image: body.image,
       location: body.location || 'Jakarta',
       verified_by_trustx: body.verifiedByTrustX ?? false,

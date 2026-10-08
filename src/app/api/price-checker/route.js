@@ -1,15 +1,32 @@
 import { NextResponse } from 'next/server';
 import { estimateDevicePrice } from '@/lib/gemini-ai';
+import { validatePriceCheckerInput } from '@/utils/validation';
 
 export async function POST(req) {
   try {
-    const { device = '', brand = '', condition = 'Good', storage = '128GB', ram = '8GB', category = 'Smartphone', ttlMs } = await req.json();
+    const body = await req.json();
+    const validation = validatePriceCheckerInput({
+      device: body.device || body.model || '',
+      brand: body.brand,
+      condition: body.condition,
+      storage: body.storage,
+      ram: body.ram,
+    });
 
-    if (!device && !brand) {
-      return NextResponse.json({ error: 'Device or brand name is required' }, { status: 400 });
+    if (!validation.isValid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const valuation = await estimateDevicePrice({ device, brand, condition, storage, ram, category, ttlMs });
+    const { device, brand, condition, storage, ram } = validation.sanitized;
+    const valuation = await estimateDevicePrice({
+      device,
+      brand,
+      condition,
+      storage,
+      ram,
+      category: body.category || 'Smartphone',
+      ttlMs: body.ttlMs,
+    });
 
     return NextResponse.json({
       price: valuation.estimatedPrice,

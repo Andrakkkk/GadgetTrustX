@@ -142,11 +142,178 @@ export function validateName(name, { min = 2, max = 70 } = {}) {
 
 /**
  * Sanitasi teks umum (alamat, bio, deskripsi)
+ * Menghilangkan tag HTML berbahaya dan membatasi panjang teks
  * @param {string} text
  * @param {number} max
  * @returns {string}
  */
 export function sanitizeText(text, max = 500) {
   if (!text || typeof text !== 'string') return '';
-  return text.trim().slice(0, max);
+  return text
+    .replace(/[<>]/g, '') // strip potential HTML tags
+    .trim()
+    .slice(0, max);
 }
+
+/**
+ * Validasi input Price Checker
+ */
+export function validatePriceCheckerInput({ device, brand, storage, ram, condition }) {
+  if (!device || typeof device !== 'string' || !device.trim()) {
+    return { isValid: false, error: 'Nama model perangkat wajib diisi.' };
+  }
+  const cleanDevice = sanitizeText(device, 80);
+  if (cleanDevice.length < 2) {
+    return { isValid: false, error: 'Nama model minimal 2 karakter.' };
+  }
+  if (device.trim().length > 80) {
+    return { isValid: false, error: 'Nama model terlalu panjang (maksimal 80 karakter).' };
+  }
+
+  const cleanBrand = sanitizeText(brand || 'Other', 40);
+  const cleanStorage = sanitizeText(storage || '128GB', 20);
+  const cleanRam = sanitizeText(ram || '8GB', 20);
+  const cleanCondition = sanitizeText(condition || 'Good', 30);
+
+  return {
+    isValid: true,
+    sanitized: {
+      device: cleanDevice,
+      brand: cleanBrand,
+      storage: cleanStorage,
+      ram: cleanRam,
+      condition: cleanCondition
+    }
+  };
+}
+
+/**
+ * Validasi input form WTB (Want to Buy / Request Perangkat)
+ */
+export function validateWtbInput({ device, budget, condition, notes }) {
+  if (!device || typeof device !== 'string' || !device.trim()) {
+    return { isValid: false, error: 'Nama perangkat yang dicari wajib diisi.' };
+  }
+  const cleanDevice = sanitizeText(device, 100);
+  if (cleanDevice.length < 2) {
+    return { isValid: false, error: 'Nama perangkat minimal 2 karakter.' };
+  }
+  if (device.trim().length > 100) {
+    return { isValid: false, error: 'Nama perangkat maksimal 100 karakter.' };
+  }
+
+  const numBudget = Number(budget);
+  if (!budget || isNaN(numBudget) || numBudget < 10000) {
+    return { isValid: false, error: 'Pagu budget minimal Rp 10.000.' };
+  }
+  if (numBudget > 1000000000) {
+    return { isValid: false, error: 'Pagu budget maksimal Rp 1.000.000.000 (1 Miliar).' };
+  }
+
+  const cleanNotes = sanitizeText(notes || '', 500);
+
+  return {
+    isValid: true,
+    sanitized: {
+      device: cleanDevice,
+      budget: Math.round(numBudget),
+      condition: sanitizeText(condition || 'Any', 30),
+      notes: cleanNotes
+    }
+  };
+}
+
+/**
+ * Validasi input Ulasan / Review Produk
+ */
+export function validateReviewInput({ rating, comment }) {
+  const numRating = parseInt(rating, 10);
+  if (isNaN(numRating) || numRating < 1 || numRating > 5) {
+    return { isValid: false, error: 'Rating bintang wajib dipilih (antara 1 sampai 5).' };
+  }
+
+  if (comment && typeof comment === 'string' && comment.trim().length > 500) {
+    return { isValid: false, error: 'Komentar ulasan maksimal 500 karakter.' };
+  }
+
+  return {
+    isValid: true,
+    sanitized: {
+      rating: numRating,
+      comment: sanitizeText(comment || '', 500)
+    }
+  };
+}
+
+/**
+ * Validasi input Pengajuan Retur / Komplain Barang
+ */
+export function validateReturnInput({ reason }) {
+  if (!reason || typeof reason !== 'string' || !reason.trim()) {
+    return { isValid: false, error: 'Alasan pengajuan retur wajib diisi.' };
+  }
+  const trimmed = reason.trim();
+  if (trimmed.length < 5) {
+    return { isValid: false, error: 'Jelaskan alasan retur minimal 5 karakter.' };
+  }
+  if (trimmed.length > 500) {
+    return { isValid: false, error: 'Alasan retur maksimal 500 karakter.' };
+  }
+
+  return {
+    isValid: true,
+    sanitized: {
+      reason: sanitizeText(trimmed, 500)
+    }
+  };
+}
+
+/**
+ * Validasi input Jual HP Bekas / Tambah Listing Device
+ */
+export function validateDeviceListingInput({ name, brand, category, price, stock, description, chipset }) {
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return { isValid: false, error: 'Nama/judul model perangkat wajib diisi.' };
+  }
+  const cleanName = sanitizeText(name, 120);
+  if (cleanName.length < 3) {
+    return { isValid: false, error: 'Nama perangkat minimal 3 karakter.' };
+  }
+  if (name.trim().length > 120) {
+    return { isValid: false, error: 'Nama perangkat maksimal 120 karakter.' };
+  }
+
+  const numPrice = Number(price);
+  if (isNaN(numPrice) || numPrice < 1000) {
+    return { isValid: false, error: 'Harga jual minimal Rp 1.000.' };
+  }
+  if (numPrice > 1000000000) {
+    return { isValid: false, error: 'Harga jual maksimal Rp 1.000.000.000 (1 Miliar).' };
+  }
+
+  const numStock = parseInt(stock, 10);
+  if (isNaN(numStock) || numStock < 0) {
+    return { isValid: false, error: 'Jumlah stok tidak boleh negatif.' };
+  }
+  if (numStock > 10000) {
+    return { isValid: false, error: 'Jumlah stok maksimal 10.000 unit.' };
+  }
+
+  if (description && typeof description === 'string' && description.trim().length > 1500) {
+    return { isValid: false, error: 'Deskripsi produk maksimal 1.500 karakter.' };
+  }
+
+  return {
+    isValid: true,
+    sanitized: {
+      name: cleanName,
+      brand: sanitizeText(brand || 'Other', 50),
+      category: sanitizeText(category || 'Smartphone', 50),
+      price: Math.round(numPrice),
+      stock: numStock,
+      description: sanitizeText(description || '', 1500),
+      chipset: sanitizeText(chipset || '', 80)
+    }
+  };
+}
+

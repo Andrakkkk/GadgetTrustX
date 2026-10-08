@@ -52,7 +52,15 @@ export default function PriceCheckerPage() {
 
   const handleAnalyze = async (e) => {
     e.preventDefault();
-    if (!formData.model) return;
+    const trimmed = formData.model.trim();
+    if (!trimmed || trimmed.length < 2) {
+      alert('Nama model perangkat minimal 2 karakter.');
+      return;
+    }
+    if (trimmed.length > 80) {
+      alert('Nama model perangkat maksimal 80 karakter.');
+      return;
+    }
 
     setAnalyzing(true);
     setResult(null);
@@ -141,14 +149,18 @@ export default function PriceCheckerPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Nama Model</label>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-xs font-black text-slate-500 uppercase tracking-widest">Nama Model</label>
+                    <span className="text-[10px] text-slate-500 font-mono">{formData.model.length}/80</span>
+                  </div>
                   <input
                     type="text"
                     required
+                    maxLength={80}
                     placeholder="e.g. iPhone 15 Pro Max"
                     className="input-field"
                     value={formData.model}
-                    onChange={e => setFormData({ ...formData, model: e.target.value })}
+                    onChange={e => setFormData({ ...formData, model: e.target.value.slice(0, 80) })}
                   />
                 </div>
 

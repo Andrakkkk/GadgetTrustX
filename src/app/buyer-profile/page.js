@@ -893,12 +893,19 @@ export default function BuyerProfilePage() {
       } catch (err) { console.error('Return image upload failed', err); }
     }
 
+    const fullReason = [returnModal.reason, returnModal.detail].filter(Boolean).join(': ').trim();
+    if (fullReason.length < 5) {
+      alert('Alasan return minimal 5 karakter.');
+      setSubmittingReturn(false);
+      return;
+    }
+
     const response = await apiFetch('/api/orders/returns', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         orderItemId: returnModal.orderItemId,
-        reason: returnModal.reason,
+        reason: fullReason.slice(0, 500),
         image: imageUrl,
       }),
     });
@@ -1390,12 +1397,15 @@ export default function BuyerProfilePage() {
                     <div className="glass-panel p-10 mb-8 border-emerald-500/30">
                       <form onSubmit={handleWtbSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="md:col-span-2">
-                          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Perangkat Target</label>
-                          <input type="text" required placeholder="e.g. iPhone 15 Pro Max 256GB" className="input-field !text-lg !py-4" value={formData.device} onChange={e => setFormData({ ...formData, device: e.target.value })} />
+                          <div className="flex justify-between items-center mb-3">
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Perangkat Target</label>
+                            <span className="text-[10px] text-slate-500 font-mono">{(formData.device || '').length}/100</span>
+                          </div>
+                          <input type="text" required maxLength={100} placeholder="e.g. iPhone 15 Pro Max 256GB" className="input-field !text-lg !py-4" value={formData.device} onChange={e => setFormData({ ...formData, device: e.target.value.slice(0, 100) })} />
                         </div>
                         <div>
                           <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Budget Maksimal (IDR)</label>
-                          <input type="number" required placeholder="15000000" className="input-field" value={formData.budget} onChange={e => setFormData({ ...formData, budget: e.target.value })} />
+                          <input type="number" required min="10000" max="1000000000" placeholder="15000000" className="input-field" value={formData.budget} onChange={e => setFormData({ ...formData, budget: e.target.value })} />
                         </div>
                         <div>
                           <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Preferensi Kondisi</label>
@@ -1404,8 +1414,11 @@ export default function BuyerProfilePage() {
                           </select>
                         </div>
                         <div className="md:col-span-2">
-                          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Catatan untuk Seller</label>
-                          <textarea rows="3" className="input-field !py-4" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Contoh: battery health harus di atas 90%..."></textarea>
+                          <div className="flex justify-between items-center mb-3">
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Catatan untuk Seller</label>
+                            <span className="text-[10px] text-slate-500 font-mono">{(formData.notes || '').length}/500</span>
+                          </div>
+                          <textarea rows="3" maxLength={500} className="input-field !py-4" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value.slice(0, 500) })} placeholder="Contoh: battery health harus di atas 90%..."></textarea>
                         </div>
                         <div className="md:col-span-2 flex gap-4">
                           <button type="submit" className="btn-primary !py-4 flex-grow font-black uppercase tracking-widest text-xs">Publikasikan Request</button>
@@ -2019,14 +2032,18 @@ export default function BuyerProfilePage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Komentar Ulasan</label>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Komentar Ulasan</label>
+                  <span className="text-[10px] text-slate-500 font-mono">{(reviewModal.comment || '').length}/500</span>
+                </div>
                 <textarea
                   required
+                  maxLength={500}
                   rows="4"
                   className="input-field !py-4"
                   placeholder="Ceritakan kondisi perangkat, performa, atau layanan seller..."
                   value={reviewModal.comment}
-                  onChange={e => setReviewModal({ ...reviewModal, comment: e.target.value })}
+                  onChange={e => setReviewModal({ ...reviewModal, comment: e.target.value.slice(0, 500) })}
                 ></textarea>
               </div>
 
@@ -2078,12 +2095,18 @@ export default function BuyerProfilePage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Detail Masalah</label>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Detail Masalah</label>
+                  <span className="text-[10px] text-slate-500 font-mono">{(returnModal.detail || '').length}/500</span>
+                </div>
                 <textarea
                   required
+                  maxLength={500}
                   rows="4"
                   className="input-field !py-4"
                   placeholder="Jelaskan masalah secara detail. Jika rusak, jelaskan bagian yang tidak berfungsi..."
+                  value={returnModal.detail || ''}
+                  onChange={e => setReturnModal({ ...returnModal, detail: e.target.value.slice(0, 500) })}
                 ></textarea>
               </div>
 

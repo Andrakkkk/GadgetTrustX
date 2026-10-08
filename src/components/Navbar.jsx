@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -172,6 +173,9 @@ export default function Navbar() {
                 </div>
               )}
 
+              {/* Theme Toggle */}
+              <ThemeToggle />
+
               {/* Divider */}
               <div className="w-px h-6 bg-white/10" />
 
@@ -239,14 +243,17 @@ export default function Navbar() {
                 <span className="text-blue-400">TrustX</span>
               </span>
             </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="p-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Nav Links */}

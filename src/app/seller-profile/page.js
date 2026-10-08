@@ -908,7 +908,10 @@ export default function SellerProfilePage() {
                                    )}
                                  </button>
                                </div>
-                               <input type="text" required placeholder="e.g. iPhone 15 Pro Max 256GB / Samsung S24 Ultra" className="input-field !text-lg !py-4" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                               <div className="flex justify-between items-center mb-1">
+                                  <span className="text-[10px] text-slate-500 font-mono">{(formData.name || '').length}/120</span>
+                                </div>
+                               <input type="text" required maxLength={120} placeholder="e.g. iPhone 15 Pro Max 256GB / Samsung S24 Ultra" className="input-field !text-lg !py-4" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value.slice(0, 120)})} />
                                <p className="text-[11px] text-slate-400">
                                  💡 <strong>Tip Cepat:</strong> Ketik nama model (contoh: <em>&quot;iPhone 13 Pro 128GB&quot;</em>), lalu klik tombol <strong>✨ Isi Otomatis dengan AI</strong> di atas untuk membuat deskripsi & spek instan.
                                </p>
@@ -950,7 +953,7 @@ export default function SellerProfilePage() {
                                   )}
                                 </button>
                               </div>
-                              <input type="number" required placeholder="15000000" className="input-field !text-xl font-bold text-white" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+                              <input type="number" required min="1000" max="1000000000" placeholder="15000000" className="input-field !text-xl font-bold text-white" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
                               
                               {aiPriceInfo && (
                                 <div className="mt-3 text-xs text-purple-300 flex items-center justify-between border-t border-purple-500/20 pt-2">
@@ -963,7 +966,7 @@ export default function SellerProfilePage() {
                            {/* Stock */}
                            <div>
                               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Stok (Qty)</label>
-                              <input type="number" min="1" required placeholder="1" className="input-field" value={formData.stock} onChange={e => setFormData({...formData, stock: parseInt(e.target.value) || 1})} />
+                              <input type="number" min="1" max="10000" required placeholder="1" className="input-field" value={formData.stock} onChange={e => setFormData({...formData, stock: Math.min(10000, parseInt(e.target.value) || 1)})} />
                            </div>
 
                            {/* Condition */}
@@ -993,12 +996,15 @@ export default function SellerProfilePage() {
                            {/* Chipset */}
                            <div className="md:col-span-2">
                               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Chipset / Processor</label>
-                              <input type="text" placeholder="e.g. Apple A17 Pro / Snapdragon 8 Gen 3" className="input-field" value={formData.chipset} onChange={e => setFormData({...formData, chipset: e.target.value})} />
+                              <input type="text" maxLength={80} placeholder="e.g. Apple A17 Pro / Snapdragon 8 Gen 3" className="input-field" value={formData.chipset} onChange={e => setFormData({...formData, chipset: e.target.value.slice(0, 80)})} />
                             
                             {/* Description */}
                             <div className="md:col-span-2">
                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Deskripsi & Detail Kondisi</label>
-                               <textarea required rows="4" className="input-field !py-4" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Sebutkan BH, lecet, status garansi..."></textarea>
+                               <div className="flex justify-between items-center mb-1">
+                                  <span className="text-[10px] text-slate-500 font-mono">{(formData.description || '').length}/1500</span>
+                                </div>
+                                <textarea required rows="4" maxLength={1500} className="input-field !py-4" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value.slice(0, 1500)})} placeholder="Sebutkan BH, lecet, status garansi..."></textarea>
                             </div>
 
                             {/* Product Image & Live Card Preview */}

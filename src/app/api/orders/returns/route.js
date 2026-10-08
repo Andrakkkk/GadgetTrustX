@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getRequestUser } from '@/lib/supabase/auth';
+import { validateReturnInput } from '@/utils/validation';
 
 async function computeOrderStatus(supabase, orderId) {
   const { data: items } = await supabase
@@ -24,6 +25,10 @@ export async function POST(request) {
   }
 
   const body = await request.json();
+  const validation = validateReturnInput({ reason: body.reason });
+  if (!validation.isValid) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
   const { data: item, error: itemError } = await result.supabase
     .from('order_items')
     .select('id, order_id, orders!inner(buyer_id)')

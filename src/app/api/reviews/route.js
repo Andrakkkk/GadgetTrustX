@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getRequestUser } from '@/lib/supabase/auth';
 import { mapReviewRow } from '@/lib/supabase/commerce';
+import { validateReviewInput } from '@/utils/validation';
 
 const reviewSelect = `
   id,
@@ -61,6 +62,15 @@ export async function POST(request) {
   }
 
   const body = await request.json();
+
+  const validation = validateReviewInput({
+    rating: body.rating,
+    comment: body.comment,
+  });
+
+  if (!validation.isValid) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
 
   // GUARD: Prevent duplicate reviews for same order_item_id
   if (body.orderItemId) {
