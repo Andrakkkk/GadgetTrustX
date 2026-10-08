@@ -7,10 +7,20 @@ function normalizeHostname(hostname) {
 }
 
 function getAllowedHostnames() {
-  return (process.env.TURNSTILE_ALLOWED_HOSTNAMES || '')
+  const configured = (process.env.TURNSTILE_ALLOWED_HOSTNAMES || '')
     .split(',')
     .map(normalizeHostname)
     .filter(Boolean);
+
+  if (configured.length > 0) {
+    const list = new Set(configured);
+    list.add('gadget-trust-x.vercel.app');
+    list.add('gadgetrustx.netlify.app');
+    if (process.env.VERCEL_URL) list.add(normalizeHostname(process.env.VERCEL_URL));
+    return Array.from(list);
+  }
+
+  return [];
 }
 
 export function getRequestIp(request) {

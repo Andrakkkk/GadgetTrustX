@@ -26,30 +26,91 @@ export default function ResetPasswordPage() {
     let mounted = true;
 
     const prepareRecoverySession = async () => {
-      const {
-        data: { session: existingSession },
-      } = await supabase.auth.getSession();
+      try {
+        const url = new URL(window.location.href);
+        const hash = window.location.hash ? window.location.hash.substring(1) : '';
+        const hashParams = new URLSearchParams(hash);
 
-      if (existingSession?.access_token) {
-        if (mounted) setIsReady(true);
-        return;
-      }
-
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get('code');
-
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) {
-          if (mounted) setError('Link reset password tidak valid atau sudah kedaluwarsa.');
+        // 1. Cek jika Supabase mengirimkan error di hash atau query
+        const hashError = hashParams.get('error_description') || hashParams.get('error');
+        const queryError = url.searchParams.get('error_description') || url.searchParams.get('error');
+        if (hashError || queryError) {
+          const rawErr = decodeURIComponent(hashError || queryError).replace(/\+/g, ' ');
+          if (mounted) {
+            setError(
+              rawErr.toLowerCase().includes('expired') || rawErr.toLowerCase().includes('invalid')
+                ? 'Link reset password sudah kedaluwarsa atau sudah pernah dipakai. Silakan minta link baru.'
+                : rawErr
+            );
+          }
           return;
         }
 
-        if (mounted) setIsReady(true);
-        return;
-      }
+        // 2. Cek token langsung dari URL Hash (#access_token=...&refresh_token=...)
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        if (accessToken && refreshToken) {
+          const { error: sessionErr } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (!sessionErr && mounted) {
+            setIsReady(true);
+            setError('');
+            return;
+          }
+        }
 
-      if (mounted) setError('Buka halaman ini melalui link reset password dari email.');
+        // 3. Cek PKCE query code (?code=...)
+        const code = url.searchParams.get('code');
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            if (mounted) setError('Link reset password tidak valid atau sudah kedaluwarsa.');
+            return;
+          }
+          if (mounted) {
+            setIsReady(true);
+            setError('');
+            return;
+          }
+        }
+
+        // 4. Cek token_hash (?token_hash=... atau hash token_hash=...)
+        const tokenHash = url.searchParams.get('token_hash') || hashParams.get('token_hash');
+        const otpType = url.searchParams.get('type') || hashParams.get('type') || 'recovery';
+        if (tokenHash) {
+          const { error: verifyErr } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: otpType,
+          });
+          if (!verifyErr && mounted) {
+            setIsReady(true);
+            setError('');
+            return;
+          }
+        }
+
+        // 5. Cek session yang sudah ada
+        const {
+          data: { session: existingSession },
+        } = await supabase.auth.getSession();
+
+        if (existingSession?.access_token) {
+          if (mounted) {
+            setIsReady(true);
+            setError('');
+            return;
+          }
+        }
+
+        // 6. Jika tidak ada token recovery sama sekali
+        if (mounted) {
+          setError('Buka halaman ini melalui link reset password resmi yang dikirimkan ke email Anda.');
+        }
+      } catch (err) {
+        if (mounted) setError('Gagal memproses sesi reset password. Silakan coba minta link baru.');
+      }
     };
 
     prepareRecoverySession();
@@ -57,7 +118,11 @@ export default function ResetPasswordPage() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' && session?.access_token && mounted) {
+      if (
+        (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') &&
+        session?.access_token &&
+        mounted
+      ) {
         setIsReady(true);
         setError('');
       }

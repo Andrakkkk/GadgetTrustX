@@ -1,161 +1,229 @@
 # Smart Device Marketplace (GadgetTrustX)
 
-## Deskripsi Project
+[![Deploy Status](https://img.shields.io/badge/Deployment-Netlify-00C7B7?style=flat&logo=netlify&logoColor=white)](https://gadgetrustx.netlify.app/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.4-black?style=flat&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.4-61DAFB?style=flat&logo=react&logoColor=black)](https://react.org/)
+[![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind_CSS_v4-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Smart Device Marketplace (GadgetTrustX) adalah platform jual beli device elektronik yang dirancang untuk membantu pengguna melakukan transaksi secara aman, cepat, dan terpercaya.
+Platform marketplace *smart device* (smartphone, tablet, laptop, dan wearable) terpadu yang dirancang khusus untuk menciptakan ekosistem jual-beli gadget bekas dan baru yang aman, transparan, dan terpercaya di Indonesia. 
 
-Sistem ini menyediakan fitur Smart Price Checker, Device Verification, Trade-In System, Seller Reputation, Smart Matching Buyer-Seller, dan pencarian produk berdasarkan spesifikasi device.
-
-Project ini dibuat untuk memenuhi tugas Daily Project 7 pada mata kuliah Rekayasa Kebutuhan.
-
----
-
-## Fitur Utama
-
-### 1. Smart Price Checker
-
-Penjual dapat menentukan harga jual device berdasarkan analisis harga pasar secara otomatis.
-
-### 2. Device Verification
-
-Pembeli dapat memverifikasi keaslian device melalui pengecekan IMEI atau serial number.
-
-### 3. Smart Matching Buyer-Seller
-
-Sistem membantu pembeli menemukan device sesuai kebutuhan berdasarkan preferensi spesifikasi.
-
-### 4. Seller Reputation
-
-Pembeli dapat melihat reputasi penjual berdasarkan review, histori transaksi, dan skor sistem.
-
-### 5. Product Filtering
-
-Pencarian produk berdasarkan RAM, storage, kondisi device, dan spesifikasi lainnya.
-
-### 6. Trade-In System
-
-Pengguna dapat melakukan tukar tambah device lama dengan device baru.
+GadgetTrustX memecahkan problematika tingginya risiko penipuan (barang fiktif, pemblokiran IMEI ilegal, manipulasi *battery health*, dan transfer langsung tanpa proteksi) dengan memadukan **Rekening Bersama Terproteksi (Escrow)**, **Mesin Valuasi & Tukar Tambah AI (Gemini AI)**, **Pemindai IMEI TAC Global**, **Pencocokan Cerdas (Smart Match)**, serta **Negosiasi Langsung (Live Chat & Custom Offer)**.
 
 ---
 
-## Teknologi yang Digunakan
+## 🌐 Tautan Proyek
 
-* Next.js
-* React.js
-* Tailwind CSS
-* JavaScript
-* Supabase Auth
-* Supabase Postgres
-* Supabase Storage
-* Vercel (Deployment)
-* GitHub (Version Control)
+- **Live Production URL**: [https://gadgetrustx.netlify.app/](https://gadgetrustx.netlify.app/)
+- **GitHub Repository**: [https://github.com/Andrakkkk/GadgetTrustX](https://github.com/Andrakkkk/GadgetTrustX)
 
 ---
 
-## Cara Menjalankan Project
+## ✨ Fitur Utama Sistem
 
-### Install Dependencies
+### 1. Marketplace & Multi-Parameter Filter (`/marketplace`)
+- Katalog lengkap produk gadget baru dan bekas berkualitas.
+- Filter pintar berdasarkan merek (*Apple, Samsung, Xiaomi, Google, dll.*), kapasitas RAM, internal storage, kondisi fisik unit, dan rentang harga numerik.
+- Pengurutan dinamis (*Termurah, Termahal, Terbaru*).
+- Penanda verifikasi resmi **"Verified by TrustX"** untuk unit yang telah lolos inspeksi keaslian.
 
+### 2. Valuasi Harga AI / AI Valuation (`/price-checker`)
+- Mesin valuasi harga pasar *real-time* bertenaga **Google Gemini AI**.
+- Menganalisis kondisi fisik, kelengkapan aksesoris, kapasitas memori, dan tren pasar terkini.
+- Menyajikan estimasi harga wajar, batas rentang pasar (*price range*), analisis *demand index*, serta tingkat keyakinan (*confidence score*).
+
+### 3. Pemindai & Verifikasi Legalitas IMEI (`/verification`)
+- Alat validasi 15-digit nomor IMEI dengan implementasi algoritma **Luhn Check**.
+- Integrasi *database* **Type Allocation Code (TAC) Global** (80+ model gadget terkemuka).
+- Memeriksa keaslian spesifikasi pabrikan, status sinyal/garansi regional, serta mendeteksi status *blacklist* atau pelaporan unit hilang/curian.
+
+### 4. Smart Match Wizard (`/smart-matching`)
+- Asisten interaktif 4-tahap yang mencocokkan kebutuhan konsumen (*budget*, fokus kebutuhan utama seperti *gaming/fotografi/produktivitas*, serta preferensi merek).
+- Mengkalkulasi *AI Match Score* untuk merekomendasikan perangkat paling sesuai dari katalog aktif.
+
+### 5. HP Bekas & Trade-In Hub (`/trade-in`)
+- Pusat program tukar tambah (*trade-in*) gadget secara digital.
+- Formulir inspeksi fisik dengan pengunggahan **6 sudut foto** (Depan, Belakang, Layar, Samping, Box/Charger, Cacat/Dent).
+- Menghasilkan taksiran potongan harga instan yang diaudit oleh AI untuk memotong total tagihan pembelian unit baru.
+
+### 6. Transaksi Aman Midtrans Escrow & Ongkir Real-Time (`/checkout`)
+- Sistem pembayaran rekening bersama (*escrow holding*) terintegrasi **Midtrans Payment Gateway** (GoPay QRIS dengan batas kedaluwarsa 15 menit, Virtual Account Bank 24 jam, dan transfer bank).
+- Dana ditahan di rekening penampungan dan hanya diteruskan ke penjual setelah barang diterima pembeli atau batas garansi 72 jam terlampaui.
+- Kalkulasi ongkir otomatis untuk kurir ekspedisi (JNE, SiCepat, Pos Indonesia) melalui integrasi API kurir.
+- Proteksi bot cerdas menggunakan **Cloudflare Turnstile** dan penerapan *idempotency key* untuk mencegah *double-charge*.
+
+### 7. Manajemen Peran & Dasbor Pengguna
+- **Dasbor Pembeli (`/buyer-profile`)**: Pelacakan riwayat pesanan, *live countdown timer* pembayaran escrow, pelacakan nomor resi pengiriman *real-time* (BinderByte API), konfirmasi pesanan selesai, dan pengajuan retur barang bermasalah beserta unggahan bukti foto cacat.
+- **Dasbor Penjual (`/seller-profile`)**: Manajemen toko, penerbitan katalog perangkat dengan fitur **AI Auto-Fill Spesifikasi** (Gemini AI), pencetakan label kirim, input nomor resi kurir, audit foto kondisi unit *trade-in*, dan tanggapan ulasan pembeli.
+- **Dasbor Superadmin / Inspector (`/admin`)**: Pemantauan metrik ekosistem, aktivasi lencana verifikasi katalog (*Verified by TrustX*), persetujuan/penolakan tiket sengketa retur barang (*Return Refund Approval*), dan manajemen verifikasi toko penjual.
+
+### 8. Live Chat & Custom Offer
+- Komunikasi langsung antara calon pembeli dan penjual via `ChatWidget`.
+- Fitur penerbitan kartu negosiasi eksklusif (**Custom Offer**) dengan harga khusus yang telah disepakati kedua pihak.
+
+---
+
+## 🛠️ Tumpukan Teknologi (Tech Stack)
+
+| Lapisan | Teknologi & Layanan |
+| :--- | :--- |
+| **Frontend Framework** | **Next.js 16.2.4** (App Router & Turbopack), **React 19.2.4** |
+| **Styling & UI Theme** | **Tailwind CSS v4**, Dark Glassmorphism Design, **GSAP 3.15** & ScrollTrigger |
+| **Autentikasi & Database** | **Supabase Auth**, **Supabase PostgreSQL** dengan Row Level Security (RLS) |
+| **Media Storage** | **Supabase Storage** (Bucket `device-media`) |
+| **Kecerdasan Buatan (AI)** | **Google Gemini AI API** (Valuasi Harga, Auto-Fill Katalog, Audit Trade-In) |
+| **Payment Gateway** | **Midtrans Client** (QRIS GoPay, Bank Virtual Account Escrow Holding) |
+| **Pengiriman & Logistik** | **BinderByte Logistics API** (Kalkulasi Tarif & Tracking Resi JNE, SiCepat, Pos) |
+| **Keamanan & Anti-Bot** | **Cloudflare Turnstile**, Idempotent Request Handlers |
+| **Hosting & Deployment** | **Netlify Edge CDN** |
+| **Testing & Quality Assurance** | **Playwright Test** (E2E, Security, Usability), **k6** (Performance & Load Testing) |
+
+---
+
+## 📂 Struktur Direktori Proyek
+
+```text
+smart-device-marketplace/
+├── e2e/                           # Skenario pengujian end-to-end
+├── prisma/                        # Skema database & migrasi (jika menggunakan Prisma)
+├── public/                        # Aset statis, ikon, dan gambar branding
+│   ├── images/
+│   └── favicon.ico
+├── scripts/                       # Skrip automasi & seed data Supabase
+│   ├── seed-supabase-devices.mjs
+│   └── ensure-supabase-admin.mjs
+├── src/
+│   ├── app/                       # Next.js App Router
+│   │   ├── admin/                 # Dasbor Superadmin / Inspector
+│   │   ├── api/                   # API Route Handlers (Auth, Orders, Payment, Shipping, AI)
+│   │   ├── buyer-profile/         # Dasbor Pembeli & Pelacakan Resi
+│   │   ├── cart/                  # Keranjang belanja
+│   │   ├── checkout/              # Checkout transaksi & Midtrans Escrow
+│   │   ├── login/                 # Autentikasi Login Supabase
+│   │   ├── marketplace/           # Katalog produk & filter multi-parameter
+│   │   ├── price-checker/         # Valuasi harga pasar Gemini AI
+│   │   ├── product/[id]/          # Halaman detail produk & ChatWidget
+│   │   ├── register/              # Registrasi akun pengguna baru
+│   │   ├── reset-password/        # Layanan pemulihan & reset kata sandi
+│   │   ├── seller-profile/        # Dasbor Penjual & Manajemen Katalog
+│   │   ├── smart-matching/        # Wizard rekomendasi preferensi AI
+│   │   ├── trade-in/              # Formulir pengajuan tukar tambah 6 sudut foto
+│   │   ├── verification/          # TrustX Scanner IMEI TAC 15-digit
+│   │   ├── layout.js              # Root Layout dengan tema Glassmorphism
+│   │   └── page.js                # Landing page utama
+│   ├── components/                # Komponen UI modular (Navbar, Footer, Modals, dll.)
+│   ├── hooks/                     # Custom React Hooks (useAuth, dll.)
+│   ├── lib/                       # Konfigurasi Supabase, Gemini AI, Turnstile
+│   └── utils/                     # Fungsi utilitas & kalkulasi format uang
+├── supabase/                      # Skema DDL SQL & aturan Row Level Security
+│   └── schema.sql
+├── testing/                       # Rangkaian pengujian terstruktur (SQA)
+│   ├── performance/               # Skrip k6 load testing
+│   └── tests/                     # Playwright specs (Functionality, Security, Usability)
+├── BACKEND_MIGRATION.md           # Panduan migrasi backend Supabase
+├── TRADE_IN_FEATURE.md            # Dokumentasi teknis alur Trade-In
+└── package.json
+```
+
+---
+
+## 🚀 Panduan Menjalankan Proyek Secara Lokal
+
+### 1. Prasyarat Sistem
+- **Node.js**: Versi 18.18 atau lebih baru (direkomendasikan Node.js 20 LTS).
+- **NPM** atau **PNPM** package manager.
+- Akun dan proyek aktif di **Supabase**.
+
+### 2. Kloning Repositori & Instalasi Dependensi
 ```bash
+git clone https://github.com/Andrakkkk/GadgetTrustX.git
+cd GadgetTrustX
 npm install
 ```
 
-### Menjalankan Development Server
+### 3. Konfigurasi Environment Variable
+Salin berkas `.env.example` menjadi `.env.local`:
+```bash
+cp .env.example .env.local
+```
 
+Lengkapi variabel lingkungan pada `.env.local`:
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+SUPABASE_STORAGE_BUCKET=device-media
+
+# Google Gemini AI
+GEMINI_API_KEY=your-gemini-api-key
+
+# Midtrans Payment Gateway
+MIDTRANS_SERVER_KEY=your-midtrans-server-key
+NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=your-midtrans-client-key
+NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION=false
+
+# Cloudflare Turnstile
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key
+TURNSTILE_SECRET_KEY=your-turnstile-secret-key
+
+# Logistics (BinderByte)
+BINDERBYTE_API_KEY=your-binderbyte-api-key
+```
+
+### 4. Setup Database & Seed Data
+1. Buka SQL Editor di dasbor Supabase Anda dan jalankan kueri dari `supabase/schema.sql`.
+2. Jalankan skrip *seeding* katalog gadget awal:
+```bash
+npm run seed:supabase
+```
+3. *(Opsional)* Tetapkan akun superadmin jika diperlukan:
+```bash
+npm run admin:ensure
+```
+
+### 5. Menjalankan Server Development
 ```bash
 npm run dev
 ```
-
-### Buka Browser
-
+Buka peramban web dan akses:
 ```text
 http://localhost:3000
 ```
 
-### Konfigurasi Supabase
+---
 
-1. Buat project Supabase.
-2. Jalankan SQL pada `supabase/schema.sql`.
-3. Salin `.env.example` menjadi `.env.local`.
-4. Isi kredensial Supabase di `.env.local`.
-5. Jalankan seed katalog awal:
+## 🧪 Pengujian & Penjaminan Mutu Perangkat Lunak (SQA)
 
+Repositori ini telah dilengkapi dengan instrumen pengujian otomatis (*automated testing*) dan dokumen rencana pengujian (*Test Plan*) standar **ISO/IEC/IEEE 29119**:
+
+### Menjalankan Pengujian Fungsional & E2E (Playwright)
 ```bash
-npm run seed:supabase
+# Menjalankan seluruh pengujian E2E headless
+npm run test:e2e
+
+# Menjalankan pengujian E2E dengan tampilan UI interaktif
+npm run test:e2e:ui
+
+# Membuka laporan hasil pengujian Playwright
+npm run test:e2e:report
 ```
 
+### Menjalankan Pengujian Usabilitas
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-SUPABASE_STORAGE_BUCKET=device-media
+npm run test:usability
 ```
 
-Status migrasi backend ada di `BACKEND_MIGRATION.md`.
-
----
-
-## Struktur Project
-
-```text
-src/
-├── app/
-├── components/
-├── lib/
-├── services/
-├── data/
-├── hooks/
-├── utils/
-└── middleware.js
+### Menjalankan Pengujian Beban & Performa (k6)
+```bash
+k6 run testing/performance/k6-load.js
 ```
 
 ---
 
-## Login
+## 👥 Kontributor & Hak Cipta
 
-Login sekarang memakai Supabase Auth. Akun dibuat melalui form register pada halaman login.
-
----
-
-## Link Project
-
-### GitHub Repository
-
-Tambahkan link GitHub kalian di sini
-
-```text
-https://github.com/username/smart-device-marketplace
-```
-
-### Live Demo Website
-
-Tambahkan link deploy website di sini
-
-```text
-https://gadget-trustx.netlify.app/
-```
-
----
-
-## Tabel Pengujian Aplikasi
-
-| No | Aspek Kualitas | Use Case                        | Skenario Pengujian                                           | Hasil yang Diharapkan                                                     | Hasil Aktual                                  | Status |
-| -- | -------------- | ------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- | --------------------------------------------- | ------ |
-| 1  | Functionality  | Menentukan Harga Jual Device    | Penjual menginput spesifikasi device                         | Sistem menampilkan rekomendasi harga berdasarkan analisis pasar           | Harga berhasil ditampilkan sesuai spesifikasi | PASS   |
-| 2  | Functionality  | Verifikasi Keaslian Device      | Pembeli menginput IMEI / serial number                       | Sistem memvalidasi data dan menampilkan status keaslian                   | Status device berhasil ditampilkan            | PASS   |
-| 3  | Functionality  | Mencari Device Sesuai Kebutuhan | Pembeli memilih preferensi device                            | Sistem menampilkan rekomendasi device sesuai kebutuhan                    | Rekomendasi device berhasil muncul            | PASS   |
-| 4  | Functionality  | Melihat Reputasi Penjual        | Pembeli membuka profil penjual                               | Sistem menampilkan skor reputasi berdasarkan review dan histori transaksi | Reputasi penjual berhasil tampil              | PASS   |
-| 5  | Functionality  | Mencari Produk                  | Pembeli menggunakan filter RAM, storage, dll                 | Sistem menampilkan hasil pencarian yang sesuai                            | Data produk berhasil difilter                 | PASS   |
-| 6  | Functionality  | Trade-In Device                 | Pembeli menginput device lama dan melakukan negosiasi        | Sistem memproses trade-in dan transaksi dapat disepakati                  | Trade-in berhasil diproses                    | PASS   |
-| 7  | Performance    | Load Marketplace                | Membuka halaman marketplace dengan banyak data produk        | Halaman terbuka kurang dari 3 detik                                       | Halaman terbuka dalam 2.1 detik               | PASS   |
-| 8  | Performance    | Device Search Speed             | Pembeli melakukan pencarian produk dengan filter spesifikasi | Hasil pencarian tampil kurang dari 3 detik                                | Hasil pencarian tampil dalam 1.8 detik        | PASS   |
-| 9  | Usability      | Navigasi Sistem                 | User mencoba seluruh menu utama                              | User dapat berpindah halaman dengan mudah                                 | Semua menu berjalan normal                    | PASS   |
-| 10 | Reliability    | Login dan Session               | User login lalu refresh halaman                              | Session tetap aktif dan data tidak hilang                                 | Session tetap tersimpan                       | PASS   |
-
----
-
-## Kesimpulan
-
-Berdasarkan hasil pengujian, sistem Smart Device Marketplace (GadgetTrustX) telah memenuhi aspek kualitas utama yang telah dirancang pada Daily Project 6, terutama pada functionality, performance, usability, dan reliability.
-
-Sistem berjalan dengan baik dan siap digunakan untuk demonstrasi serta evaluasi tugas akhir Daily Project 7.
+- **Pengembang & Penyusun**: Leandra Andra ([@Andrakkkk](https://github.com/Andrakkkk))
+- **Mata Kuliah**: Praktikum Penjaminan Kualitas Perangkat Lunak (PKPL) / SQA & Rekayasa Kebutuhan
+- **Institusi**: Program Studi Informatika, Universitas Muhammadiyah Malang
