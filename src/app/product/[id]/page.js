@@ -316,6 +316,11 @@ export default function ProductDetailPage({ params }) {
     if (user.role === 'seller') { alert('Seller tidak bisa menambahkan produk ke keranjang.'); return; }
     if (user.email === device.seller?.id) { alert('Anda tidak bisa membeli produk Anda sendiri.'); return; }
     if (device.stock > 0) {
+      // 1. Instant 0ms Optimistic Feedback (trigger animation, green check, and badge immediately)
+      flyToCartAnimation(btn, device.image);
+      setAddedToCart(true);
+      window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { delta: 1 } }));
+
       setIsAdding(true);
       try {
         const res = await apiFetch('/api/cart', {
@@ -324,15 +329,20 @@ export default function ProductDetailPage({ params }) {
           body: JSON.stringify({ deviceId: device.id, quantity: 1 }),
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error || 'Gagal menambahkan ke keranjang.'); return; }
+        if (!res.ok) {
+          setAddedToCart(false);
+          window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { delta: -1 } }));
+          alert(data.error || 'Gagal menambahkan ke keranjang.');
+          return;
+        }
         const totalCount = (data.items || []).reduce((sum, item) => sum + (item.cartQty || 1), 0);
         window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { count: totalCount } }));
-        flyToCartAnimation(btn, device.image);
-        setAddedToCart(true);
-        setTimeout(() => setAddedToCart(false), 2500);
       } catch (err) {
         console.error('Error adding to cart:', err);
+        setAddedToCart(false);
+        window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { delta: -1 } }));
       } finally {
+        setTimeout(() => setAddedToCart(false), 2000);
         setIsAdding(false);
       }
     }

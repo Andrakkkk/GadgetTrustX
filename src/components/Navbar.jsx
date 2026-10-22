@@ -45,6 +45,10 @@ export default function Navbar() {
         if (isMounted) setCartCount(e.detail.count);
         return;
       }
+      if (e?.detail && typeof e.detail.delta === 'number') {
+        if (isMounted) setCartCount((prev) => Math.max(0, prev + e.detail.delta));
+        return;
+      }
       try {
         const res = await apiFetch('/api/cart');
         if (res.ok) {

@@ -125,6 +125,11 @@ export default function DeviceCard({ device }) {
       return;
     }
     if (device.stock > 0) {
+      // 1. Instant 0ms Optimistic Feedback (trigger animation, green check, and badge immediately)
+      flyToCartAnimation(btn, device.image);
+      setAddedToCart(true);
+      window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { delta: 1 } }));
+
       setIsAdding(true);
       try {
         const res = await apiFetch('/api/cart', {
@@ -134,17 +139,20 @@ export default function DeviceCard({ device }) {
         });
         const data = await res.json();
         if (!res.ok) {
+          // Revert optimistic update on failure
+          setAddedToCart(false);
+          window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { delta: -1 } }));
           alert(data.error || 'Gagal menambahkan ke keranjang.');
           return;
         }
         const totalCount = (data.items || []).reduce((sum, item) => sum + (item.cartQty || 1), 0);
         window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { count: totalCount } }));
-        flyToCartAnimation(btn, device.image);
-        setAddedToCart(true);
-        setTimeout(() => setAddedToCart(false), 2000);
       } catch (err) {
         console.error('Error adding to cart:', err);
+        setAddedToCart(false);
+        window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { delta: -1 } }));
       } finally {
+        setTimeout(() => setAddedToCart(false), 2000);
         setIsAdding(false);
       }
     }
