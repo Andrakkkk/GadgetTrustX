@@ -1,0 +1,478 @@
+﻿Dokumen Rencana Pengujian (Test Plan)
+Pertanian Kurnia Manokwari
+________________
+
+
+
+
+Bidang
+	Detail
+	Identifikasi Test Plan
+	TP-PERTANIANKURNIA-MOD1-202210370311015
+	Nama Aplikasi
+	Pertanian Kurnia Manokwari
+	Versi
+	v1.0
+	Peran yang Dipilih untuk Diuji
+	Pelanggan
+	Nama Praktikan
+	Faizal Qadri Trianto
+	NIM
+	202210370311015
+	Kelas
+	PKPL-A
+	Tanggal Dibuat
+	05 Agustus 2026
+	Tanggal Terakhir Diperbarui
+	12 Agustus 2026
+	Status
+	Final
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Riwayat Revisi
+Versi
+	Tanggal Revisi
+	Diperbarui Oleh
+	Deskripsi Perubahan
+	1.0
+	12 Agustus 2026
+	Faizal Qadri Trianto
+	Draf awal
+	
+
+	
+
+	
+
+	
+
+	DAFTAR ISI
+DAFTAR ISI        3
+1. Konteks Pengujian        4
+1.1 Item Uji        4
+1.2 Cakupan Pengujian        4
+1.3 Peran yang Dipilih untuk Diuji        5
+1.4 Asumsi dan Batasan        5
+2. Daftar Risiko        7
+3. Strategi Pengujian        9
+3.1 Pendekatan Keseluruhan        9
+3.2 Arah Pengujian yang Direncanakan        9
+3.3 Kriteria        9
+4. Lingkungan Pengujian        10
+4.1 Perangkat dan Perangkat Keras        10
+4.2 Perangkat Lunak dan Alat        10
+4.3 Jaringan dan Backend        10
+4.4 Data Uji        10
+5. Jadwal Pengujian        11
+6. Luaran Pengujian        12
+
+
+1. Konteks Pengujian
+Software Requirements Specification (SRS) merupakan salah satu item persiapan untuk Modul 2. Pada Modul 1, praktikan mengidentifikasi sumber kebutuhan yang tersedia dan mulai menyiapkan SRS secara bertahap. SRS belum harus selesai atau dikumpulkan pada Modul 1; batas waktu penyelesaian dan pengumpulannya mengikuti petunjuk pada materi Modul 2.
+1.1 Item Uji
+Bidang
+	Deskripsi
+	Nama Aplikasi
+	Pertanian Kurnia Manokwari
+	Platform
+	Web
+	Versi
+	v1.0
+	URL Deployment / Akses
+	https://pertaniankurnia-demo.example.com
+	Tumpukan Teknologi
+	Laravel 10, MySQL, Bootstrap 5
+	Deskripsi Singkat
+	Pertanian Kurnia Manokwari adalah platform pemesanan berbasis web untuk toko pertanian di Manokwari. Platform ini memungkinkan pelanggan menjelajahi produk pertanian, melakukan pemesanan, dan mengonfirmasi pembayaran secara online, menggantikan koordinasi transfer bank manual.
+	
+
+1.2 Cakupan Pengujian
+Fitur dalam Cakupan (In-Scope)
+Cantumkan minimal delapan fitur secara keseluruhan, yaitu Login, Register, Forgot Password, dan lima fitur tambahan. Fitur tambahan boleh berupa subfeature apabila memiliki fungsi dan test scenario yang jelas. Proyek secara keseluruhan harus memiliki variasi input, proses, behavior, state, atau business rule yang cukup untuk mendukung rangkaian praktikum.
+
+
+No.
+	Nama Fitur
+	Jenis Fitur
+	Deskripsi Singkat
+	1
+	Login
+	Fitur Autentikasi
+	Pelanggan terdaftar login menggunakan email dan password untuk mengakses akunnya.
+	2
+	Register
+	Fitur Autentikasi
+	Pelanggan baru membuat akun dengan nama, alamat email, nomor telepon, dan password.
+	3
+	Forgot Password
+	Fitur Autentikasi
+	Pelanggan mengatur ulang password yang lupa melalui tautan yang dikirim ke email terdaftar.
+	4
+	Jelajah dan Cari Produk
+	Fitur Tambahan
+	Pelanggan menjelajahi katalog produk berdasarkan kategori (pupuk, benih, pestisida, alat pertanian, pakan ternak) dan mencari produk berdasarkan kata kunci.
+	5
+	Tambah ke Keranjang / Kelola Keranjang
+	Fitur Tambahan
+	Pelanggan menambahkan produk ke keranjang, mengubah jumlah, dan menghapus item.
+	6
+	Checkout dan Konfirmasi Pembayaran
+	Fitur Tambahan
+	Pelanggan meninjau keranjang, memilih metode pembayaran, dan mengunggah bukti transfer bank manual untuk mengonfirmasi pesanan.
+	7
+	Pelacakan Pesanan
+	Fitur Tambahan
+	Pelanggan melihat status pesanan yang telah dibuat, mulai dari verifikasi pembayaran hingga pengiriman.
+	8
+	Permintaan Pesanan Grosir
+	Fitur Tambahan
+	Pelanggan mengajukan permintaan penawaran khusus untuk pembelian dalam jumlah besar, misalnya satu karung penuh pupuk untuk kelompok tani.
+	
+
+Di Luar Cakupan (Out-of-Scope)
+
+
+No.
+	Fitur / Aspek
+	Alasan Pengecualian
+	1
+	Administrator dashboard dan manajemen inventaris
+	Termasuk dalam peran Administrator, yang berada di luar cakupan pengujian yang dipilih untuk praktikum ini
+	2
+	Push notification
+	Belum diimplementasikan pada build saat ini
+	
+
+1.3 Peran yang Dipilih untuk Diuji
+Bidang
+	Detail
+	Nama Peran
+	Pelanggan
+	Deskripsi Peran
+	Pelanggan adalah pengguna akhir yang menjelajahi produk, melakukan pemesanan, dan mengonfirmasi pembayaran untuk kebutuhan pertanian.
+	Fitur yang Dapat Diakses
+	Login, Register, Forgot Password, Jelajah dan Cari Produk, Tambah ke Keranjang/Kelola Keranjang, Checkout dan Konfirmasi Pembayaran, Pelacakan Pesanan, Permintaan Pesanan Grosir
+	Alasan Pemilihan
+	Peran Pelanggan mencakup alur pemesanan inti aplikasi, tempat sebagian besar logika bisnis dan risiko terkonsentrasi. Pemilihan role ini menentukan cakupan pengujian, tetapi tidak membuat proyek Web yang sama dianggap berbeda dari proyek Web milik praktikan lain.
+	
+
+1.4 Asumsi dan Batasan
+Jenis
+	Deskripsi
+	Asumsi
+	Delapan fitur yang terdaftar, terdiri dari tiga fitur autentikasi dan lima fitur tambahan, berfungsi dan dapat didemonstrasikan pada build yang sudah di-deploy.
+	Asumsi
+	Minimal satu akun uji Pelanggan yang valid dengan riwayat pesanan tersedia sebelum pengujian dimulai.
+	Batasan
+	Pengujian dibatasi hanya pada peran Pelanggan. Fungsi di sisi Administrator berada di luar cakupan praktikum ini.
+	Batasan
+	Pengujian dilakukan pada lingkungan staging, bukan pada lingkungan produksi.
+	
+
+2. Daftar Risiko
+Identifikasi minimal lima risiko yang terkait dengan proyek yang dipilih. Prioritas = Dampak × Kemungkinan, masing-masing menggunakan skala 1 sampai 5, dengan 1 berarti sangat rendah dan 5 berarti sangat tinggi.
+
+
+ID Risiko
+	Deskripsi Risiko
+	Jenis
+	Dampak
+	Kemungkinan
+	Prioritas
+	Strategi Mitigasi
+	R-01
+	Total keranjang dihitung secara tidak tepat saat diskon pembelian dalam jumlah besar diterapkan
+	Produk
+	4
+	3
+	12
+	Menempatkan perhitungan jumlah dan diskon sebagai fokus pengujian setelah pendekatan yang sesuai dipelajari.
+	R-02
+	Konfirmasi pembayaran gagal saat unggahan bukti transfer bank tidak tersimpan dengan benar
+	Produk
+	5
+	3
+	15
+	Menguji alur unggah dengan berbagai ukuran dan format berkas, serta memastikan status pesanan hanya diperbarui setelah unggahan berhasil
+	R-03
+	Pesanan ganda terbentuk ketika tombol checkout diklik lebih dari sekali
+	Produk
+	4
+	3
+	12
+	Menguji pengiriman berulang secara cepat dan memastikan aksi checkout bersifat idempotent
+	R-04
+	Waktu pelaksanaan praktikum terbatas untuk menguji seluruh lima fitur tambahan
+	Proyek
+	3
+	3
+	9
+	Memprioritaskan pengujian manual pada Checkout dan Konfirmasi Pembayaran terlebih dahulu, berdasarkan prioritas risikonya
+	R-05
+	Jumlah stok produk tidak diperbarui dengan benar setelah pesanan dibuat
+	Produk
+	4
+	2
+	8
+	Menempatkan pembaruan stok sebagai fokus pengujian setelah pendekatan yang sesuai dipelajari.
+	R-06
+	Staf toko belum terbiasa dengan proses pemesanan online yang baru
+	Proyek
+	2
+	3
+	6
+	Memberikan pengarahan singkat mengenai sistem kepada staf toko sebelum sistem diluncurkan
+	
+
+Risiko produk adalah potensi cacat pada fitur atau kualitas produk. Risiko proyek adalah masalah pengelolaan, seperti tenggat waktu yang ketat, perubahan kebutuhan, atau keterbatasan sumber daya.
+
+
+3. Strategi Pengujian
+3.1 Pendekatan Keseluruhan
+Bidang
+	Deskripsi
+	Pendekatan Pengujian
+	<Belum ditetapkan; dilengkapi pada modul berikutnya>
+	Tingkat Pengujian
+	<Belum ditetapkan; dilengkapi pada modul berikutnya>
+	Jenis Pengujian Utama
+	<Belum ditetapkan; dilengkapi pada modul berikutnya>
+	Fitur Berprioritas Tinggi
+	Checkout dan Konfirmasi Pembayaran dan Permintaan Pesanan Grosir (skor prioritas tertinggi pada Bagian 2)
+	
+
+3.2 Arah Pengujian yang Direncanakan
+
+
+Pada Modul 1, arah dan teknik pengujian belum perlu ditentukan. Bagian ini dilengkapi secara bertahap setelah materi terkait dipelajari pada modul berikutnya.
+
+
+Aspek
+	Status
+	Catatan
+	Arah dan Teknik Pengujian
+	<Belum ditetapkan>
+	Dilengkapi setelah materi terkait dipelajari pada modul berikutnya.
+	
+
+Pertahankan placeholder berikut dan jangan menambahkan nama teknik pada Modul 1.
+3.3 Kriteria
+Jenis Kriteria
+	Deskripsi
+	Kriteria Masuk
+	Delapan fitur yang terdaftar sudah tersedia pada staging, dan minimal satu akun uji Pelanggan yang valid sudah siap
+	Kriteria Keluar
+	Seluruh test case yang direncanakan untuk delapan fitur terdaftar telah dieksekusi dan dicatat
+	Kriteria Lolos
+	Hasil aktual sesuai dengan hasil yang diharapkan
+	Kriteria Gagal
+	Hasil aktual tidak sesuai dengan hasil yang diharapkan, atau aplikasi mengalami crash
+	Pengujian Ulang
+	Test case yang gagal dieksekusi ulang setelah defect yang dilaporkan diperbaiki
+	Pengujian Regresi
+	Test case yang kritis dieksekusi ulang setelah setiap perubahan untuk memastikan tidak ada regresi
+	
+
+4. Lingkungan Pengujian
+4.1 Perangkat dan Perangkat Keras
+Item
+	Detail
+	Jenis Perangkat
+	Laptop
+	Processor
+	Intel Core i5-1135G7
+	RAM
+	8 GB
+	Sistem Operasi
+	Windows 11
+	
+
+4.2 Perangkat Lunak dan Alat
+Alat / Perangkat Lunak
+	Versi / Detail
+	Tujuan
+	Browser / Perangkat
+	Chrome 126
+	Eksekusi pengujian
+	Alat Dokumentasi
+	Google Docs
+	Test Plan dan pelaporan
+	Alat Tangkapan Layar
+	Snipping Tool
+	Pengumpulan bukti
+	
+
+4.3 Jaringan dan Backend
+Item
+	Detail
+	Jaringan
+	Wi-Fi Kampus
+	Backend / API
+	Backend Laravel dengan database MySQL
+	URL Dasar Pengujian
+	https://pertaniankurnia-demo.example.com
+	
+
+4.4 Data Uji
+Identifikasi jenis data uji secara umum yang dibutuhkan. Kumpulan data uji secara detail akan disiapkan pada modul berikutnya.
+
+
+Jenis Data
+	Deskripsi
+	Akun Uji Valid
+	customer1@kurniamanokwari-test.com, akun Pelanggan terdaftar dengan riwayat pesanan
+	Akun Uji Tidak Valid
+	Alamat email yang belum terdaftar, atau email terdaftar dengan password yang salah
+	Contoh Data Input
+	Contoh nama produk seperti pupuk NPK, benih jagung hibrida, dan contoh jumlah pemesanan dalam jumlah besar
+	Data Uji Tambahan
+	<Belum ditetapkan; dilengkapi pada modul berikutnya>
+	
+
+5. Jadwal Pengujian
+Pada Modul 1, isi hanya jadwal dan luaran yang memang ditetapkan untuk Modul 1. Detail Modul 2 sampai Modul 6 dan UAP tetap berupa placeholder sampai modul terkait dibahas dan ditetapkan.
+
+
+Modul
+	Aktivitas Pengujian Utama
+	Perkiraan Waktu
+	Luaran Utama
+	Modul 1
+	Perencanaan pengujian, analisis risiko, dan registrasi proyek
+	Minggu 1-2
+	Dokumen Test Plan dan entri registrasi proyek
+	Modul 2
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	Modul 3
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	Modul 4
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	Modul 5
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	Modul 6
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	UAP
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	
+
+6. Luaran Pengujian
+Pada Modul 1, luaran yang perlu diselesaikan adalah dokumen Test Plan dan entri registrasi proyek. Luaran, format, dan status untuk Modul 2 sampai Modul 6 serta UAP belum ditetapkan pada dokumen ini.
+
+
+Modul
+	Luaran
+	Format
+	Status
+	Modul 1
+	Dokumen Test Plan
+	DOCX / PDF
+	Sedang Berjalan
+	Modul 1
+	Entri Lembar Registrasi Proyek
+	Google Sheets
+	Sedang Berjalan
+	Modul 2
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	Modul 3
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	Modul 4
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	Modul 5
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	Modul 6
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	UAP
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	<Belum ditetapkan>
+	________________
+
+
+
+
+Lampiran A: Glosarium
+	
+
+Istilah kunci yang digunakan dalam dokumen ini, berdasarkan ISO/IEC/IEEE 29119-1.
+
+
+Istilah
+	Definisi
+	Item Uji
+	Objek yang diuji. Dalam praktikum ini, objek tersebut adalah aplikasi web atau mobile yang dipilih oleh masing-masing praktikan.
+	Dasar Pengujian
+	Sumber diturunkannya sebuah test condition, dapat berupa kebutuhan, user story, atau perilaku yang sudah disepakati.
+	Kondisi Pengujian
+	Aspek dari aplikasi yang dapat diuji secara spesifik, dan menjadi dasar penulisan test case.
+	Kasus Uji
+	Input konkret, langkah-langkah, dan hasil yang diharapkan, yang digunakan untuk memeriksa satu test condition.
+	Lingkungan Pengujian
+	Perangkat, software, dan akses yang dibutuhkan untuk benar-benar menjalankan pengujian.
+	Risk
+	Kemungkinan terjadinya suatu masalah, baik pada produk itu sendiri (Risiko Produk) maupun pada proyek di sekitarnya, seperti tenggat waktu yang ketat (Risiko Proyek).
+	Incident
+	Segala sesuatu yang tidak terduga yang ditemukan selama pengujian dan perlu ditelusuri lebih lanjut.
+	Traceability
+	Kemampuan untuk menelusuri hubungan dari sebuah kebutuhan, ke sebuah fitur, hingga ke test case yang memeriksanya.
+	Dampak
+	Seberapa serius akibat yang akan timbul apabila sebuah risiko benar-benar terjadi, dinilai dengan skala 1 sampai 5.
+	Kemungkinan
+	Seberapa besar kemungkinan sebuah risiko benar-benar terjadi, dinilai dengan skala 1 sampai 5.
+	Prioritas
+	Tingkat kepentingan suatu risiko secara keseluruhan, dihitung sebagai Dampak dikalikan Kemungkinan. Digunakan untuk menentukan risiko mana yang perlu ditangani lebih dulu.
+	Strategi Mitigasi
+	Tindakan yang direncanakan untuk mengurangi dampak suatu risiko atau kemungkinan risiko tersebut terjadi.
+	Kriteria Masuk
+	Kondisi yang harus terpenuhi sebelum pengujian dapat dimulai.
+	Kriteria Keluar
+	Kondisi yang menandakan bahwa pengujian telah selesai.

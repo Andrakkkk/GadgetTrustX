@@ -10,23 +10,32 @@ const cartSelect = `
   )
 `;
 
+async function fetchUserCart(supabase, buyerId) {
+  const { data, error } = await supabase
+    .from('cart_items')
+    .select(cartSelect)
+    .eq('buyer_id', buyerId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || []).map(mapCartRow);
+}
+
 export async function GET(request) {
   const result = await getRequestUser(request);
   if (result.error) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  const { data, error } = await result.supabase
-    .from('cart_items')
-    .select(cartSelect)
-    .eq('buyer_id', result.profile.id)
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  try {
+    const items = await fetchUserCart(result.supabase, result.profile.id);
+    return NextResponse.json({ items });
+  } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  return NextResponse.json({ items: data.map(mapCartRow) });
 }
 
 export async function POST(request) {
@@ -76,7 +85,12 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return GET(request);
+  try {
+    const items = await fetchUserCart(result.supabase, result.profile.id);
+    return NextResponse.json({ items });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
 
 export async function PATCH(request) {
@@ -98,8 +112,8 @@ export async function PATCH(request) {
   }
 
   const quantity = Math.max(Number(body.quantity || 1), 1);
-  if (quantity > item.devices.stock) {
-    return NextResponse.json({ error: `Only ${item.devices.stock} in stock.` }, { status: 409 });
+  if (quantity > item.devices?.stock) {
+    return NextResponse.json({ error: `Only ${item.devices?.stock} in stock.` }, { status: 409 });
   }
 
   const { error } = await result.supabase
@@ -111,7 +125,12 @@ export async function PATCH(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return GET(request);
+  try {
+    const items = await fetchUserCart(result.supabase, result.profile.id);
+    return NextResponse.json({ items });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
 
 export async function DELETE(request) {
@@ -133,5 +152,10 @@ export async function DELETE(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return GET(request);
+  try {
+    const items = await fetchUserCart(result.supabase, result.profile.id);
+    return NextResponse.json({ items });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }

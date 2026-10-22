@@ -35,39 +35,59 @@ export default function Navbar() {
 
   useEffect(() => {
     let isMounted = true;
-    const fetchBadges = async () => {
+
+    const fetchCartBadge = async (e) => {
       if (!user) {
-        if (isMounted) {
-          setCartCount(0);
-          setUnreadCount(0);
-        }
+        if (isMounted) setCartCount(0);
+        return;
+      }
+      if (e?.detail && typeof e.detail.count === 'number') {
+        if (isMounted) setCartCount(e.detail.count);
         return;
       }
       try {
-        const [cartResponse, chatsResponse] = await Promise.all([
-          apiFetch('/api/cart'),
-          apiFetch('/api/chats'),
-        ]);
-        const [cartData, chatsData] = await Promise.all([cartResponse.json(), chatsResponse.json()]);
-        if (isMounted) {
-          setCartCount((cartData.items || []).reduce((sum, item) => sum + (item.cartQty || 1), 0));
-          setUnreadCount((chatsData.chats || []).filter((chat) => {
-            const lastMsg = chat.messages[chat.messages.length - 1];
-            return lastMsg && lastMsg.senderId !== user.email && !lastMsg.read;
-          }).length);
+        const res = await apiFetch('/api/cart');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            setCartCount((data.items || []).reduce((sum, item) => sum + (item.cartQty || 1), 0));
+          }
         }
       } catch (err) {
-        console.error('Failed updating badges:', err);
+        console.error('Failed updating cart badge:', err);
       }
     };
 
-    fetchBadges();
-    window.addEventListener('cartUpdated', fetchBadges);
-    window.addEventListener('chatUpdated', fetchBadges);
+    const fetchChatBadge = async () => {
+      if (!user) {
+        if (isMounted) setUnreadCount(0);
+        return;
+      }
+      try {
+        const res = await apiFetch('/api/chats');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            setUnreadCount((data.chats || []).filter((chat) => {
+              const lastMsg = chat.messages && chat.messages[chat.messages.length - 1];
+              return lastMsg && lastMsg.senderId !== user.email && !lastMsg.read;
+            }).length);
+          }
+        }
+      } catch (err) {
+        console.error('Failed updating chat badge:', err);
+      }
+    };
+
+    fetchCartBadge();
+    fetchChatBadge();
+
+    window.addEventListener('cartUpdated', fetchCartBadge);
+    window.addEventListener('chatUpdated', fetchChatBadge);
     return () => {
       isMounted = false;
-      window.removeEventListener('cartUpdated', fetchBadges);
-      window.removeEventListener('chatUpdated', fetchBadges);
+      window.removeEventListener('cartUpdated', fetchCartBadge);
+      window.removeEventListener('chatUpdated', fetchChatBadge);
     };
   }, [user]);
 

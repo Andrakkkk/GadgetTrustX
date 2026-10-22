@@ -6,27 +6,28 @@ import { useAuth } from '@/hooks/useAuth';
 import { apiFetch } from '@/lib/api-client';
 
 const flyToCartAnimation = (btn, imageSrc) => {
-  if (!btn) return;
+  if (!btn || typeof window === 'undefined') return;
   const btnRect = btn.getBoundingClientRect();
   const cartIcon = document.getElementById('cart-icon');
   if (!cartIcon) return;
   const cartRect = cartIcon.getBoundingClientRect();
   const flyingImg = document.createElement('img');
   flyingImg.src = imageSrc;
-  flyingImg.style.cssText = `position:fixed;left:${btnRect.left}px;top:${btnRect.top}px;width:80px;height:80px;border-radius:16px;object-fit:cover;z-index:99999;box-shadow:0 8px 32px rgba(59,130,246,0.6);transition:all 1.2s cubic-bezier(0.25,1,0.3,1);pointer-events:none;`;
+  flyingImg.style.cssText = `position:fixed;left:${btnRect.left}px;top:${btnRect.top}px;width:80px;height:80px;border-radius:16px;object-fit:cover;z-index:99999;box-shadow:0 8px 32px rgba(59,130,246,0.6);transition:all 0.9s cubic-bezier(0.25,1,0.3,1);pointer-events:none;`;
   document.body.appendChild(flyingImg);
-  flyingImg.getBoundingClientRect();
-  flyingImg.style.left = `${cartRect.left + cartRect.width / 2 - 15}px`;
-  flyingImg.style.top = `${cartRect.top + cartRect.height / 2 - 15}px`;
-  flyingImg.style.width = '30px';
-  flyingImg.style.height = '30px';
-  flyingImg.style.opacity = '0';
-  flyingImg.style.transform = 'scale(0.3)';
+  requestAnimationFrame(() => {
+    flyingImg.style.left = `${cartRect.left + cartRect.width / 2 - 15}px`;
+    flyingImg.style.top = `${cartRect.top + cartRect.height / 2 - 15}px`;
+    flyingImg.style.width = '30px';
+    flyingImg.style.height = '30px';
+    flyingImg.style.opacity = '0';
+    flyingImg.style.transform = 'scale(0.3)';
+  });
   setTimeout(() => {
     flyingImg.remove();
-    cartIcon.style.transform = 'scale(1.3)';
-    setTimeout(() => (cartIcon.style.transform = 'scale(1)'), 300);
-  }, 1200);
+    cartIcon.style.transform = 'scale(1.25)';
+    setTimeout(() => (cartIcon.style.transform = 'scale(1)'), 250);
+  }, 950);
 };
 
 function StarRating({ rating = 0, max = 5, size = 'sm' }) {
@@ -123,6 +124,7 @@ export default function ProductDetailPage({ params }) {
   const [reviewFilter, setReviewFilter] = useState(0);
   const [selectedReview, setSelectedReview] = useState(null);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [sellerReviews, setSellerReviews] = useState([]);
   const [aiValuation, setAiValuation] = useState(null);
   const [sellerReplyText, setSellerReplyText] = useState('');
@@ -308,22 +310,31 @@ export default function ProductDetailPage({ params }) {
   }
 
   const handleAddToCart = async (e) => {
+    if (isAdding) return;
     const btn = e.currentTarget;
     if (!user) { router.push('/login'); return; }
     if (user.role === 'seller') { alert('Seller tidak bisa menambahkan produk ke keranjang.'); return; }
     if (user.email === device.seller?.id) { alert('Anda tidak bisa membeli produk Anda sendiri.'); return; }
     if (device.stock > 0) {
-      const res = await apiFetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId: device.id, quantity: 1 }),
-      });
-      const data = await res.json();
-      if (!res.ok) { alert(data.error || 'Gagal menambahkan ke keranjang.'); return; }
-      window.dispatchEvent(new Event('cartUpdated'));
-      flyToCartAnimation(btn, device.image);
-      setAddedToCart(true);
-      setTimeout(() => setAddedToCart(false), 2500);
+      setIsAdding(true);
+      try {
+        const res = await apiFetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceId: device.id, quantity: 1 }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Gagal menambahkan ke keranjang.'); return; }
+        const totalCount = (data.items || []).reduce((sum, item) => sum + (item.cartQty || 1), 0);
+        window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { count: totalCount } }));
+        flyToCartAnimation(btn, device.image);
+        setAddedToCart(true);
+        setTimeout(() => setAddedToCart(false), 2500);
+      } catch (err) {
+        console.error('Error adding to cart:', err);
+      } finally {
+        setIsAdding(false);
+      }
     }
   };
 
@@ -579,18 +590,25 @@ export default function ProductDetailPage({ params }) {
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleAddToCart}
-                  disabled={!inStock}
+                  disabled={!inStock || isAdding}
                   className={`flex-1 py-3 rounded-xl text-sm font-black uppercase tracking-wide flex items-center justify-center gap-2 transition-all
                     ${inStock
                       ? addedToCart
                         ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
-                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_4px_20px_rgba(59,130,246,0.35)] hover:shadow-[0_4px_28px_rgba(59,130,246,0.5)]'
+                        : isAdding
+                          ? 'bg-blue-700 text-white opacity-80 cursor-wait'
+                          : 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_4px_20px_rgba(59,130,246,0.35)] hover:shadow-[0_4px_28px_rgba(59,130,246,0.5)] active:scale-95'
                       : 'bg-white/[0.04] text-slate-600 cursor-not-allowed'
                     }
                   `}
                 >
                   {addedToCart ? (
                     <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg> Ditambahkan!</>
+                  ) : isAdding ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Menyimpan ke Keranjang...</span>
+                    </>
                   ) : (
                     <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> {inStock ? 'Tambah ke Keranjang' : 'Stok Habis'}</>
                   )}

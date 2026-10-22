@@ -5,27 +5,28 @@ import { useAuth } from '@/hooks/useAuth';
 import { apiFetch } from '@/lib/api-client';
 
 const flyToCartAnimation = (btn, imageSrc) => {
-  if (!btn) return;
+  if (!btn || typeof window === 'undefined') return;
   const btnRect = btn.getBoundingClientRect();
   const cartIcon = document.getElementById('cart-icon');
   if (!cartIcon) return;
   const cartRect = cartIcon.getBoundingClientRect();
   const flyingImg = document.createElement('img');
   flyingImg.src = imageSrc;
-  flyingImg.style.cssText = `position:fixed;left:${btnRect.left}px;top:${btnRect.top}px;width:64px;height:64px;border-radius:12px;object-fit:cover;z-index:99999;box-shadow:0 8px 32px rgba(59,130,246,0.5);transition:all 1s cubic-bezier(0.25,1,0.3,1);pointer-events:none;`;
+  flyingImg.style.cssText = `position:fixed;left:${btnRect.left}px;top:${btnRect.top}px;width:64px;height:64px;border-radius:12px;object-fit:cover;z-index:99999;box-shadow:0 8px 32px rgba(59,130,246,0.5);transition:all 0.8s cubic-bezier(0.25,1,0.3,1);pointer-events:none;`;
   document.body.appendChild(flyingImg);
-  flyingImg.getBoundingClientRect();
-  flyingImg.style.left = `${cartRect.left + cartRect.width / 2 - 15}px`;
-  flyingImg.style.top = `${cartRect.top + cartRect.height / 2 - 15}px`;
-  flyingImg.style.width = '24px';
-  flyingImg.style.height = '24px';
-  flyingImg.style.opacity = '0';
-  flyingImg.style.transform = 'scale(0.2)';
+  requestAnimationFrame(() => {
+    flyingImg.style.left = `${cartRect.left + cartRect.width / 2 - 15}px`;
+    flyingImg.style.top = `${cartRect.top + cartRect.height / 2 - 15}px`;
+    flyingImg.style.width = '24px';
+    flyingImg.style.height = '24px';
+    flyingImg.style.opacity = '0';
+    flyingImg.style.transform = 'scale(0.2)';
+  });
   setTimeout(() => {
     flyingImg.remove();
-    cartIcon.style.transform = 'scale(1.3)';
-    setTimeout(() => (cartIcon.style.transform = 'scale(1)'), 300);
-  }, 1000);
+    cartIcon.style.transform = 'scale(1.25)';
+    setTimeout(() => (cartIcon.style.transform = 'scale(1)'), 250);
+  }, 850);
 };
 
 export default function DeviceCard({ device }) {
@@ -36,6 +37,7 @@ export default function DeviceCard({ device }) {
   const [deviceRating, setDeviceRating] = useState(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const sellerName = device.seller?.name || 'Seller TrustX';
 
   // Extract seller badges array safely
@@ -111,6 +113,7 @@ export default function DeviceCard({ device }) {
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
+    if (isAdding) return;
     const btn = e.currentTarget;
     if (!user) { router.push('/login'); return; }
     if (user.role === 'seller') {
@@ -122,17 +125,28 @@ export default function DeviceCard({ device }) {
       return;
     }
     if (device.stock > 0) {
-      const res = await apiFetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId: device.id, quantity: 1 }),
-      });
-      const data = await res.json();
-      if (!res.ok) { alert(data.error || 'Gagal menambahkan ke keranjang.'); return; }
-      window.dispatchEvent(new Event('cartUpdated'));
-      flyToCartAnimation(btn, device.image);
-      setAddedToCart(true);
-      setTimeout(() => setAddedToCart(false), 2000);
+      setIsAdding(true);
+      try {
+        const res = await apiFetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceId: device.id, quantity: 1 }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || 'Gagal menambahkan ke keranjang.');
+          return;
+        }
+        const totalCount = (data.items || []).reduce((sum, item) => sum + (item.cartQty || 1), 0);
+        window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { count: totalCount } }));
+        flyToCartAnimation(btn, device.image);
+        setAddedToCart(true);
+        setTimeout(() => setAddedToCart(false), 2000);
+      } catch (err) {
+        console.error('Error adding to cart:', err);
+      } finally {
+        setIsAdding(false);
+      }
     }
   };
 
@@ -326,12 +340,14 @@ export default function DeviceCard({ device }) {
           </button>
           <button
             onClick={handleAddToCart}
-            disabled={!inStock}
+            disabled={!inStock || isAdding}
             className={`flex-1 h-7 sm:h-10 rounded-md sm:rounded-xl text-[9px] sm:text-xs font-black uppercase tracking-wide transition-all flex items-center justify-center gap-1
               ${inStock
                 ? addedToCart
                   ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20'
+                  : isAdding
+                    ? 'bg-blue-700 text-white opacity-80 cursor-wait'
+                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 active:scale-95'
                 : 'bg-white/[0.03] text-slate-600 cursor-not-allowed'
               }
             `}
@@ -340,6 +356,11 @@ export default function DeviceCard({ device }) {
               <>
                 <span className="hidden sm:inline">Ditambahkan!</span>
                 <span>✓</span>
+              </>
+            ) : isAdding ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span className="truncate">Menyimpan...</span>
               </>
             ) : (
               <>
