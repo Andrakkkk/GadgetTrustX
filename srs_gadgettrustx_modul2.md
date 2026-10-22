@@ -234,12 +234,12 @@ Seluruh pertukaran data antara browser klien dan server menggunakan protokol ama
 | :--- | :--- |
 | **ID Kebutuhan** | REQ-F-07 |
 | **Nama Kebutuhan** | Checkout dan Pembayaran Terpadu (Midtrans Payment) |
-| **Deskripsi** | Sistem memfasilitasi transaksi checkout, pemilihan alamat tujuan, estimasi ongkir ekspedisi, pembuatan invoice token Midtrans, dan verifikasi status pembayaran lunas. |
+| **Deskripsi** | Sistem memfasilitasi transaksi checkout, pemilihan alamat tujuan, estimasi ongkir ekspedisi, dan penerbitan token dialog pembayaran Midtrans Snap untuk pembeli. |
 | **Aktor Utama** | Pembeli (Buyer) |
 | **Pre-Kondisi** | Keranjang belanja memiliki minimal 1 produk dan stok unit masih tersedia. |
-| **Alur Utama (Main Flow)** | 1. Pembeli menekan tombol 'Checkout' dari halaman /cart.<br>2. Pembeli memilih alamat kirim dan opsi kurir ekspedisi di /checkout.<br>3. Sistem menghitung total tagihan = subtotal barang + ongkos kirim.<br>4. Pembeli menekan 'Bayar Sekarang' $\rightarrow$ popup Midtrans Snap muncul.<br>5. Pembeli memilih metode (QRIS/Transfer VA) pada simulator sandbox dan menyelesaikan pembayaran.<br>6. Webhook Midtrans memperbarui status pesanan menjadi 'Paid' dan invoice sukses dibuat. |
-| **Alur Alternatif / Eksepsi** | • Jika transaksi dibatalkan oleh pengguna, token transaksi kedaluwarsa dan status pesanan menjadi 'Cancelled'.<br>• Jika stok habis saat proses checkout berlangsung, sistem membatalkan transaksi secara aman. |
-| **Post-Kondisi** | Pesanan tercatat di database dengan status lunas, stok produk berkurang otomatis. |
+| **Alur Utama (Main Flow)** | 1. Pembeli menekan tombol 'Checkout' dari halaman /cart.<br>2. Pembeli memilih alamat kirim dan opsi kurir ekspedisi di /checkout.<br>3. Sistem menghitung total tagihan = subtotal barang + ongkos kirim.<br>4. Pembeli menekan 'Bayar Sekarang' $\rightarrow$ popup Midtrans Snap muncul.<br>5. Pembeli memilih metode (QRIS/Transfer VA) pada simulator sandbox dan menyelesaikan pembayaran.<br>6. Dialog pembayaran Midtrans Snap menampilkan konfirmasi transaksi dan detail invoice belanja pembeli. |
+| **Alur Alternatif / Eksepsi** | • Jika dialog pembayaran ditutup oleh pembeli, sistem kembali ke antarmuka checkout secara aman tanpa menghapus produk terpilih.<br>• Jika stok habis saat proses checkout berlangsung, sistem membatalkan transaksi secara aman. |
+| **Post-Kondisi** | Transaksi pembayaran berhasil diverifikasi dan faktur belanja diterbitkan untuk pembeli. |
 | **Aturan Bisnis (Business Rules)** | Kalkulasi total harga dihitung ulang dan diverifikasi pada server-side sebelum menerbitkan snap token. |
 | **Ketertelusuran (Traceability)** | Mendukung Fitur No. 7 pada Test Plan. Mitigasi Risiko Kritis R-07 (Skor 15). |
 
@@ -307,7 +307,7 @@ Seluruh pertukaran data antara browser klien dan server menggunakan protokol ama
 | **Deskripsi** | Sistem menyediakan formulir klaim retur/komplain bagi pembeli untuk melaporkan produk cacat, menyertakan alasan kerusakan, dan melampirkan foto bukti fisik. |
 | **Aktor Utama** | Pembeli (Buyer) |
 | **Pre-Kondisi** | Pembeli menerima barang yang bermasalah dan masa garansi komplain masih aktif. |
-| **Alur Utama (Main Flow)** | 1. Pembeli membuka riwayat transaksi di /buyer-profile.<br>2. Pembeli menekan tombol 'Ajukan Retur / Komplain'.<br>3. Pembeli memilih kategori kendala (Cacat Fisik, Fungsi Rusak, IMEI Tidak Cocok, Barang Tidak Sesuai).<br>4. Pembeli mengisi deskripsi detail kerusakan dan mengunggah foto bukti fisik cacat.<br>5. Pembeli menekan 'Kirim Pengajuan'.<br>6. Sistem menerbitkan nomor tiket komplain dan mengubah status pesanan menjadi 'Return Pending'. |
+| **Alur Utama (Main Flow)** | 1. Pembeli membuka riwayat transaksi di /buyer-profile.<br>2. Pembeli menekan tombol 'Ajukan Retur / Komplain'.<br>3. Pembeli memilih kategori kendala (Cacat Fisik, Fungsi Rusak, IMEI Tidak Cocok, Barang Tidak Sesuai).<br>4. Pembeli mengisi deskripsi detail kerusakan dan mengunggah foto bukti fisik cacat.<br>5. Pembeli menekan 'Kirim Pengajuan'.<br>6. Sistem menerbitkan nomor tiket komplain dan mencatat riwayat pengajuan klaim pembeli. |
 | **Alur Alternatif / Eksepsi** | • Jika berkas foto melebihi 5MB atau berformat selain gambar, sistem menolak unggahan dan menampilkan peringatan error yang jelas.<br>• Pengajuan retur dibatasi hanya pada form input pembeli; alur approval dan transfer refund berada di sisi Seller/Admin (Out-of-Scope). |
 | **Post-Kondisi** | Tiket retur tersimpan di database dan pembeli dapat memantau status komplainnya. |
 | **Aturan Bisnis (Business Rules)** | Deskripsi kerusakan minimal 20 karakter dan maksimal 500 karakter. Wajib melampirkan minimal 1 foto bukti fisik. |

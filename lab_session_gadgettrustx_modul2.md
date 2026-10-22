@@ -24,7 +24,7 @@ Kebutuhan fungsional sistem berikut diambil dari Dokumen Spesifikasi Kebutuhan P
 * **REQ-F-06: Keranjang Belanja (Shopping Cart)**  
   Sistem harus memfasilitasi pembeli untuk menambahkan produk gadget ke keranjang belanja, memperbarui jumlah kuantitas tanpa melebihi batas sisa stok inventori toko, dan menghapus item dari keranjang belanja.
 * **REQ-F-07: Checkout dan Pembayaran Terpadu (Midtrans Payment)**  
-  Sistem harus menghitung subtotal belanja dan estimasi ongkos kirim ekspedisi secara akurat pada checkout, menerbitkan token transaksi pembayaran Midtrans Snap, dan memperbarui status pesanan menjadi 'Paid' setelah konfirmasi pembayaran settlement.
+  Sistem harus menghitung subtotal belanja dan estimasi ongkos kirim ekspedisi secara akurat pada checkout pesanan, serta menerbitkan token transaksi pembayaran Midtrans Snap untuk menampilkan dialog pembayaran bagi pembeli.
 * **REQ-F-08: Verifikasi Keaslian IMEI (TrustX Scanner)**  
   Sistem harus memverifikasi keaslian perangkat seluler melalui input 15-digit nomor IMEI yang divalidasi menggunakan algoritma Luhn checksum dan dicocokkan dengan database TAC (Type Allocation Code) resmi global.
 * **REQ-F-09: Smart Price Checker (Valuasi Harga Pasar AI)**  
@@ -56,7 +56,7 @@ Sesuai standar ISO/IEC/IEEE 29119-2, seluruh kebutuhan di atas dikelompokkan ke 
   * Traceability: REQ-F-06  
 
 * **FS-04 – Order Checkout & Payment Escrow**  
-  * Objective: Memvalidasi kalkulasi invoice pesanan, ongkos kirim ekspedisi, integrasi token Midtrans Snap, dan pelunasan transaksi.  
+  * Objective: Memvalidasi pemilihan kurir ekspedisi, kalkulasi ongkos kirim, dan integrasi modal pembayaran Midtrans Snap pada sisi pembeli.  
   * Priority: **High**  
   * Traceability: REQ-F-07  
 
@@ -101,8 +101,8 @@ Sesuai standar ISO/IEC/IEEE 29119-2, seluruh kebutuhan di atas dikelompokkan ke 
 | **TCond-013** | FS-03 | Menghapus item dari keranjang belanja berhasil dan mengupdate subtotal | Medium | REQ-F-06 |
 | **TCond-014** | FS-04 | Checkout menghitung total bayar secara presisi (subtotal barang + ongkir kurir) | High | REQ-F-07 |
 | **TCond-015** | FS-04 | Pembuatan token transaksi Midtrans Snap berhasil dan memunculkan popup pembayaran | High | REQ-F-07 |
-| **TCond-016** | FS-04 | Webhook notifikasi Midtrans berhasil mengonfirmasi status pesanan menjadi 'Paid' | High | REQ-F-07 |
-| **TCond-017** | FS-04 | Checkout membatalkan transaksi secara aman saat pengguna menutup simulator Midtrans | Medium | REQ-F-07 |
+| **TCond-016** | FS-04 | Pemilihan alamat dan opsi kurir ekspedisi memperbarui kalkulasi tarif ongkir secara real-time | High | REQ-F-07 |
+| **TCond-017** | FS-04 | Penutupan atau pembatalan modal pembayaran Midtrans Snap oleh pembeli tidak menghilangkan produk terpilih | Medium | REQ-F-07 |
 | **TCond-018** | FS-05 | Scanner memverifikasi keaslian dan detail model untuk 15-digit IMEI valid | High | REQ-F-08 |
 | **TCond-019** | FS-05 | Scanner menolak input IMEI dengan panjang tidak pas 15 digit (<15 atau >15 digit) | High | REQ-F-08 |
 | **TCond-020** | FS-05 | Scanner menolak input IMEI yang mengandung karakter non-angka (huruf/simbol) | High | REQ-F-08 |
@@ -133,8 +133,8 @@ Sesuai standar ISO/IEC/IEEE 29119-2, seluruh kebutuhan di atas dikelompokkan ke 
 | **CI-012** | Tombol hapus item dan kalkulasi subtotal keranjang | TCond-013 | Medium | REQ-F-06 |
 | **CI-013** | Kalkulasi total tagihan invoice checkout dan ongkir | TCond-014 | High | REQ-F-07 |
 | **CI-014** | Integrasi pembuatan Snap Token API Midtrans | TCond-015 | High | REQ-F-07 |
-| **CI-015** | Webhook penerimaan settlement pembayaran pesanan | TCond-016 | High | REQ-F-07 |
-| **CI-016** | Penanganan pembatalan transaksi pembayaran checkout | TCond-017 | Medium | REQ-F-07 |
+| **CI-015** | Selector alamat pengiriman pembeli dan kalkulator tarif ongkir kurir | TCond-016 | High | REQ-F-07 |
+| **CI-016** | Penanganan interaksi penutupan dialog pembayaran Midtrans Snap | TCond-017 | Medium | REQ-F-07 |
 | **CI-017** | Input field 15-digit nomor IMEI TrustX Scanner | TCond-018, TCond-019 | High | REQ-F-08 |
 | **CI-018** | Validasi checksum Luhn dan pencocokan database TAC | TCond-018, TCond-020 | High | REQ-F-08 |
 | **CI-019** | Form kalkulator spesifikasi gadget Smart Price Checker | TCond-021 | High | REQ-F-09 |
@@ -190,7 +190,7 @@ Sesuai standar ISO/IEC/IEEE 29119-2, seluruh kebutuhan di atas dikelompokkan ke 
 | **TCond-011, 012** | *Boundary Value Analysis* | Menguji nilai batas maksimum kuantitas keranjang belanja terhadap sisa stok inventori. |
 | **TCond-013** | *Equivalence Partitioning* | Menguji pembaruan subtotal keranjang belanja saat item dihapus. |
 | **TCond-014, 015** | *Equivalence Partitioning* | Menguji kalkulasi finansial invoice pembayaran dan pembuatan token Snap Midtrans. |
-| **TCond-016, 017** | *State Transition Testing* | Menguji transisi status pesanan (Pending -> Paid via webhook, atau Pending -> Cancelled). |
+| **TCond-016, 017** | *State Transition Testing* | Menguji transisi antarmuka pembayaran pembeli (Checkout Form -> Midtrans Modal Open -> Modal Closed/Dismissed). |
 | **TCond-018, 019, 020** | *Boundary Value Analysis & Luhn* | Menguji batas digit nomor IMEI (14, 15, 16 digit) dan validitas algoritma checksum modulo 10. |
 | **TCond-021, 022** | *Equivalence Partitioning & Fallback* | Menguji keakuratan estimasi harga model Gemini AI dan mekanisme fail-safe fallback lokal. |
 | **TCond-023, 024** | *Boundary Value Analysis* | Menguji nilai batas minimum (Rp 1.000.000) dan maksimum (Rp 30.000.000) pada slider budget. |
