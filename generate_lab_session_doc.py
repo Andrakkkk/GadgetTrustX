@@ -175,17 +175,15 @@ def generate_lab_session_docx():
         ("TCond-013", "FS-03", "Menghapus item dari keranjang belanja berhasil dan mengupdate subtotal", "Medium", "REQ-F-06"),
         ("TCond-014", "FS-04", "Checkout menghitung total bayar secara presisi (subtotal barang + ongkir kurir)", "High", "REQ-F-07"),
         ("TCond-015", "FS-04", "Pembuatan token transaksi Midtrans Snap berhasil dan memunculkan popup pembayaran", "High", "REQ-F-07"),
-        ("TCond-016", "FS-04", "Pemilihan alamat dan opsi kurir ekspedisi memperbarui kalkulasi tarif ongkir secara real-time", "High", "REQ-F-07"),
-        ("TCond-017", "FS-04", "Penutupan atau pembatalan modal pembayaran Midtrans Snap oleh pembeli tidak menghilangkan produk terpilih", "Medium", "REQ-F-07"),
-        ("TCond-018", "FS-05", "Scanner memverifikasi keaslian dan detail model untuk 15-digit IMEI valid", "High", "REQ-F-08"),
-        ("TCond-019", "FS-05", "Scanner menolak input IMEI dengan panjang tidak pas 15 digit (<15 atau >15 digit)", "High", "REQ-F-08"),
-        ("TCond-020", "FS-05", "Scanner menolak input IMEI yang mengandung karakter non-angka (huruf/simbol)", "High", "REQ-F-08"),
-        ("TCond-021", "FS-06", "Smart Price Checker menyajikan valuasi harga wajar pasar berbasis model Gemini AI", "High", "REQ-F-09"),
-        ("TCond-022", "FS-06", "Price Checker beralih ke tabel harga cadangan lokal saat API AI mengalami timeout", "Medium", "REQ-F-09"),
-        ("TCond-023", "FS-07", "Smart Matching wizard menyajikan rekomendasi top-3 gadget sesuai preferensi budget", "High", "REQ-F-10"),
-        ("TCond-024", "FS-07", "Slider budget Smart Matching dibatasi pada rentang valid (Rp 1jt s/d Rp 30jt)", "Medium", "REQ-F-10"),
-        ("TCond-025", "FS-08", "Pengguna berhasil menginput spesifikasi HP bekas, valuasi AI, dan menerbitkan listing", "High", "REQ-F-11"),
-        ("TCond-026", "FS-08", "Form jual HP bekas menolak file foto non-gambar atau ukuran file melebihi batas 5MB", "Medium", "REQ-F-11"),
+        ("TCond-016", "FS-05", "Scanner memverifikasi keaslian dan detail model untuk 15-digit IMEI valid", "High", "REQ-F-08"),
+        ("TCond-017", "FS-05", "Scanner menolak input IMEI dengan panjang tidak pas 15 digit (<15 atau >15 digit)", "High", "REQ-F-08"),
+        ("TCond-018", "FS-05", "Scanner menolak input IMEI yang mengandung karakter non-angka (huruf/simbol)", "High", "REQ-F-08"),
+        ("TCond-019", "FS-06", "Smart Price Checker menyajikan valuasi harga wajar pasar berbasis model Gemini AI", "High", "REQ-F-09"),
+        ("TCond-020", "FS-06", "Price Checker beralih ke tabel harga cadangan lokal saat API AI mengalami timeout", "Medium", "REQ-F-09"),
+        ("TCond-021", "FS-07", "Smart Matching wizard menyajikan rekomendasi top-3 gadget sesuai preferensi budget", "High", "REQ-F-10"),
+        ("TCond-022", "FS-07", "Slider budget Smart Matching dibatasi pada rentang valid (Rp 1jt s/d Rp 30jt)", "Medium", "REQ-F-10"),
+        ("TCond-023", "FS-08", "Pengguna berhasil menginput spesifikasi HP bekas, valuasi AI, dan menerbitkan listing", "High", "REQ-F-11"),
+        ("TCond-024", "FS-08", "Form jual HP bekas menolak file foto non-gambar atau ukuran file melebihi batas 5MB", "Medium", "REQ-F-11"),
     ]
     t_tc = create_styled_table(doc, len(tc_data) + 1, 5)
     add_header_row(t_tc, ["ID", "Feature Set", "Description (Kondisi Pengujian)", "Priority", "Traceability"])
@@ -212,15 +210,13 @@ def generate_lab_session_docx():
         ("CI-012", "Tombol hapus item dan kalkulasi subtotal keranjang", "TCond-013", "Medium", "REQ-F-06"),
         ("CI-013", "Kalkulasi total tagihan invoice checkout dan ongkir", "TCond-014", "High", "REQ-F-07"),
         ("CI-014", "Integrasi pembuatan Snap Token API Midtrans", "TCond-015", "High", "REQ-F-07"),
-        ("CI-015", "Selector alamat pengiriman pembeli dan kalkulator tarif ongkir kurir", "TCond-016", "High", "REQ-F-07"),
-        ("CI-016", "Penanganan interaksi penutupan dialog pembayaran Midtrans Snap", "TCond-017", "Medium", "REQ-F-07"),
-        ("CI-017", "Input field 15-digit nomor IMEI TrustX Scanner", "TCond-018, TCond-019", "High", "REQ-F-08"),
-        ("CI-018", "Validasi checksum Luhn dan pencocokan database TAC", "TCond-018, TCond-020", "High", "REQ-F-08"),
-        ("CI-019", "Form kalkulator spesifikasi gadget Smart Price Checker", "TCond-021", "High", "REQ-F-09"),
-        ("CI-020", "Mekanisme fail-safe fallback database harga lokal", "TCond-022", "Medium", "REQ-F-09"),
-        ("CI-021", "Wizard bertahap dan slider budget Smart Matching", "TCond-023, TCond-024", "High", "REQ-F-10"),
-        ("CI-022", "Form input spesifikasi dan kondisi jual HP bekas", "TCond-025", "High", "REQ-F-11"),
-        ("CI-023", "Validasi upload file gambar fisik gadget (MIME & 5MB)", "TCond-026", "Medium", "REQ-F-11"),
+        ("CI-015", "Input field 15-digit nomor IMEI TrustX Scanner", "TCond-016, TCond-017", "High", "REQ-F-08"),
+        ("CI-016", "Validasi checksum Luhn dan pencocokan database TAC", "TCond-016, TCond-018", "High", "REQ-F-08"),
+        ("CI-017", "Form kalkulator spesifikasi gadget Smart Price Checker", "TCond-019", "High", "REQ-F-09"),
+        ("CI-018", "Mekanisme fail-safe fallback database harga lokal", "TCond-020", "Medium", "REQ-F-09"),
+        ("CI-019", "Wizard bertahap dan slider budget Smart Matching", "TCond-021, TCond-022", "High", "REQ-F-10"),
+        ("CI-020", "Form input spesifikasi dan kondisi jual HP bekas", "TCond-023", "High", "REQ-F-11"),
+        ("CI-021", "Validasi upload file gambar fisik gadget (MIME & 5MB)", "TCond-024", "Medium", "REQ-F-11"),
     ]
     t_ci = create_styled_table(doc, len(ci_data) + 1, 5)
     add_header_row(t_ci, ["ID", "Description (Objek Cakupan Pengujian)", "Related Test Condition", "Priority", "Traceability"])
@@ -248,17 +244,15 @@ def generate_lab_session_docx():
         ("REQ-F-06", "FS-03", "TCond-013", "CI-012"),
         ("REQ-F-07", "FS-04", "TCond-014", "CI-013"),
         ("REQ-F-07", "FS-04", "TCond-015", "CI-014"),
-        ("REQ-F-07", "FS-04", "TCond-016", "CI-015"),
-        ("REQ-F-07", "FS-04", "TCond-017", "CI-016"),
-        ("REQ-F-08", "FS-05", "TCond-018", "CI-017, CI-018"),
-        ("REQ-F-08", "FS-05", "TCond-019", "CI-017"),
-        ("REQ-F-08", "FS-05", "TCond-020", "CI-017, CI-018"),
-        ("REQ-F-09", "FS-06", "TCond-021", "CI-019"),
-        ("REQ-F-09", "FS-06", "TCond-022", "CI-020"),
-        ("REQ-F-10", "FS-07", "TCond-023", "CI-021"),
-        ("REQ-F-10", "FS-07", "TCond-024", "CI-021"),
-        ("REQ-F-11", "FS-08", "TCond-025", "CI-022"),
-        ("REQ-F-11", "FS-08", "TCond-026", "CI-023"),
+        ("REQ-F-08", "FS-05", "TCond-016", "CI-015, CI-016"),
+        ("REQ-F-08", "FS-05", "TCond-017", "CI-015"),
+        ("REQ-F-08", "FS-05", "TCond-018", "CI-015, CI-016"),
+        ("REQ-F-09", "FS-06", "TCond-019", "CI-017"),
+        ("REQ-F-09", "FS-06", "TCond-020", "CI-018"),
+        ("REQ-F-10", "FS-07", "TCond-021", "CI-019"),
+        ("REQ-F-10", "FS-07", "TCond-022", "CI-019"),
+        ("REQ-F-11", "FS-08", "TCond-023", "CI-020"),
+        ("REQ-F-11", "FS-08", "TCond-024", "CI-021"),
     ]
     t_ttm = create_styled_table(doc, len(ttm_data) + 1, 4)
     add_header_row(t_ttm, ["Requirement", "Feature Set", "Test Condition", "Coverage Item"])
@@ -279,11 +273,10 @@ def generate_lab_session_docx():
         ("TCond-011, 012", "Boundary Value Analysis", "Menguji nilai batas maksimum kuantitas keranjang belanja terhadap sisa stok inventori."),
         ("TCond-013", "Equivalence Partitioning", "Menguji pembaruan subtotal keranjang belanja saat item dihapus."),
         ("TCond-014, 015", "Equivalence Partitioning", "Menguji kalkulasi finansial invoice pembayaran dan pembuatan token Snap Midtrans."),
-        ("TCond-016, 017", "Equivalence Partitioning", "Mempartisi respon checkout pembeli (pemilihan kurir pengiriman valid vs penanganan penutupan dialog bayar)."),
-        ("TCond-018, 019, 020", "Boundary Value Analysis & Luhn", "Menguji batas digit nomor IMEI (14, 15, 16 digit) dan validitas algoritma checksum modulo 10."),
-        ("TCond-021, 022", "Equivalence Partitioning & Fallback", "Menguji keakuratan estimasi harga model Gemini AI dan mekanisme fail-safe fallback lokal."),
-        ("TCond-023, 024", "Boundary Value Analysis", "Menguji nilai batas minimum (Rp 1.000.000) dan maksimum (Rp 30.000.000) pada slider budget."),
-        ("TCond-025, 026", "Equivalence Partitioning & BVA", "Menguji proses penerbitan listing bekas dan batas ukuran file foto kondisi fisik (<= 5MB).")
+        ("TCond-016, 017, 018", "Boundary Value Analysis & Luhn", "Menguji batas digit nomor IMEI (14, 15, 16 digit) dan validitas algoritma checksum modulo 10."),
+        ("TCond-019, 020", "Equivalence Partitioning & Fallback", "Menguji keakuratan estimasi harga model Gemini AI dan mekanisme fail-safe fallback lokal."),
+        ("TCond-021, 022", "Boundary Value Analysis", "Menguji nilai batas minimum (Rp 1.000.000) dan maksimum (Rp 30.000.000) pada slider budget."),
+        ("TCond-023, 024", "Equivalence Partitioning & BVA", "Menguji proses penerbitan listing bekas dan batas ukuran file foto kondisi fisik (<= 5MB).")
     ]
     t_tech = create_styled_table(doc, len(tech_data) + 1, 3)
     add_header_row(t_tech, ["Test Condition ID", "Test Design Technique", "Rationale (Alasan Pemilihan Teknik)"])
