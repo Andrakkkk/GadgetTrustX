@@ -1,4 +1,7 @@
-import { getAICache, setAICache } from './ai-cache';
+import { getAICache, setAICache } from './ai-cache.js';
+
+// Set to track invalid or revoked API keys at runtime so they are not repeatedly retried
+const invalidKeysSet = new Set();
 
 const GEMINI_KEYS = [
   process.env.GEMINI_API_KEY,
@@ -10,45 +13,107 @@ const GEMINI_KEYS = [
   process.env.GEMINI_API_KEY_7,
 ].filter(Boolean);
 
+// Priority list of Gemini models to ensure maximum uptime & fallback
+const GEMINI_MODELS = [
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-flash-lite-latest',
+  'gemini-flash-latest',
+  'gemini-3.8-flash',
+];
+
 /**
- * Robust caller to Gemini API with key rotation
+ * Safely parse JSON from raw LLM output (handles markdown code fences and surrounding text)
+ */
+function parseJSONSafely(text) {
+  if (!text) return null;
+  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+  const cleanedText = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : text.replace(/```json/gi, '').replace(/```/g, '').trim();
+  return JSON.parse(cleanedText);
+}
+
+/**
+ * Robust caller to Gemini API with automatic key rotation, bad-key pruning, and multi-model fallback.
  */
 export async function callGemini(promptText) {
-  const keys = [...new Set(GEMINI_KEYS)].sort(() => 0.5 - Math.random());
+  // Filter out known invalid keys
+  let availableKeys = GEMINI_KEYS.filter(k => !invalidKeysSet.has(k));
+  if (availableKeys.length === 0) {
+    // If all were marked invalid, reset in case of temporary provider issues
+    invalidKeysSet.clear();
+    availableKeys = GEMINI_KEYS;
+  }
+
   let lastError = null;
 
-  for (const apiKey of keys) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: {
+  for (const apiKey of availableKeys) {
+    for (const model of GEMINI_MODELS) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+          const generationConfig = {
             temperature: 0.2,
             responseMimeType: 'application/json',
-            maxOutputTokens: 1500
+            maxOutputTokens: 2500
+          };
+
+          // thinkingConfig is supported on gemini-3.5-flash to produce ultra-fast, direct responses without token overhead
+          if (model === 'gemini-3.5-flash') {
+            generationConfig.thinkingConfig = { thinkingBudget: 0 };
           }
-        })
-      });
 
-      const data = await res.json();
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig
+            }),
+            signal: AbortSignal.timeout(12000)
+          });
 
-      if (res.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-        const text = data.candidates[0].content.parts[0].text;
-        const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-        const cleanedText = jsonMatch ? jsonMatch[0] : text.replace(/```json/gi, '').replace(/```/g, '').trim();
-        return JSON.parse(cleanedText);
-      } else {
-        lastError = data.error?.message || 'Gemini API call failed';
+          const data = await res.json();
+
+          if (res.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+            const rawText = data.candidates[0].content.parts[0].text;
+            const parsed = parseJSONSafely(rawText);
+            if (parsed) return parsed;
+          }
+
+          const errMsg = data.error?.message || `HTTP ${res.status}`;
+          lastError = errMsg;
+
+          // Blacklist invalid/revoked keys immediately so they are skipped in future calls
+          if (res.status === 400 && (errMsg.includes('API key not valid') || errMsg.includes('API_KEY_INVALID'))) {
+            console.warn(`[Gemini AI] Blacklisting invalid API key (${apiKey.slice(0, 8)}...): ${errMsg}`);
+            invalidKeysSet.add(apiKey);
+            break; // Stop trying other models with this broken key
+          }
+
+          // If high demand 503 or quota 429, wait briefly and retry or fall back to next model
+          if (res.status === 503 || res.status === 429) {
+            if (attempt === 1) {
+              await new Promise(resolve => setTimeout(resolve, 400));
+              continue;
+            }
+          }
+
+          // Non-retryable error for this model, move to next model in the fallback chain
+          break;
+        } catch (err) {
+          lastError = err.message;
+          // Timeout or network drop, try next model
+          break;
+        }
       }
-    } catch (err) {
-      lastError = err.message;
+
+      // If key was blacklisted, move to next key immediately
+      if (invalidKeysSet.has(apiKey)) break;
     }
   }
 
-  throw new Error(lastError || 'All Gemini API keys failed');
+  throw new Error(lastError || 'Semua Gemini API key dan model cadangan gagal dihubungi.');
 }
 
 /**
@@ -56,7 +121,6 @@ export async function callGemini(promptText) {
  */
 export async function estimateDevicePrice({ device = '', brand = '', condition = 'Good', storage = '128GB', ram = '8GB', category = 'Smartphone', ttlMs = 10 * 60 * 1000 }) {
   const cacheKey = `price_${brand}_${device}_${condition}_${storage}_${ram}_${category}`;
-  // Use custom ttlMs (default 10 mins for Price Checker, or 24 hours for Wajar AI on product page)
   const cached = getAICache(cacheKey, ttlMs);
   if (cached) return cached;
 
@@ -88,21 +152,24 @@ Kembalikan HANYA JSON valid dengan struktur:
 
   try {
     const result = await callGemini(prompt);
-    if (result && typeof result.estimatedPrice === 'number' && result.estimatedPrice > 1000000) {
+    if (result && typeof result.estimatedPrice === 'number' && result.estimatedPrice > 100000) {
       finalValuation = {
         estimatedPrice: Math.round(result.estimatedPrice),
         priceRange: Array.isArray(result.priceRange) && result.priceRange.length === 2
           ? [Math.round(result.priceRange[0]), Math.round(result.priceRange[1])]
           : [Math.round(result.estimatedPrice * 0.92), Math.round(result.estimatedPrice * 1.08)],
-        confidence: typeof result.confidence === 'number' ? result.confidence : 90,
+        confidence: typeof result.confidence === 'number' ? result.confidence : 92,
         marketDemand: result.marketDemand || 'High',
-        reasoning: result.reasoning || `Berdasarkan analisis tren pasar terkini di Indonesia untuk ${brand} ${device} (${storage}, ${condition}).`
+        reasoning: result.reasoning || `Berdasarkan analisis pasar terkini di Indonesia untuk ${brand} ${device} (${storage}, ${condition}).`,
+        isFallback: false,
+        isAiValuation: true
       };
     }
   } catch (err) {
     console.warn('Gemini Price Estimation fallback triggered:', err.message);
   }
 
+  // If AI service failed, use transparent algorithmic fallback
   if (!finalValuation) {
     finalValuation = fallbackPriceEstimation({ device, brand, condition, storage, ram, category });
   }
@@ -224,9 +291,11 @@ function fallbackPriceEstimation({ device = '', brand = '', condition = 'Good', 
   return {
     estimatedPrice: finalPrice,
     priceRange: [Math.round(finalPrice * 0.9), Math.round(finalPrice * 1.1)],
-    confidence: 88,
+    confidence: 72,
     marketDemand: finalPrice > 12000000 ? 'High' : 'Moderate',
-    reasoning: `Hasil estimasi AI valuation berdasarkan model ${brand} ${device} (${storage}, ${ram}) dengan kondisi ${condition}.`,
+    reasoning: `[Estimasi Cadangan Sistem] Layanan AI Gemini sedang sibuk. Estimasi ini dihitung berdasarkan rumus statistik pasar untuk ${brand} ${device} (${storage}, ${ram}, ${condition}), bukan analisis mendalam AI.`,
+    isFallback: true,
+    isAiValuation: false
   };
 }
 
@@ -234,6 +303,8 @@ function fallbackPriceEstimation({ device = '', brand = '', condition = 'Good', 
  * AI Smart Match Engine
  */
 export async function evaluateSmartMatch({ preferences, devices }) {
+  if (!devices || devices.length === 0) return [];
+
   const { budget = 15000000, primaryUse = 'Daily Lifestyle', brandPreference = 'Any' } = preferences;
 
   const prompt = `Anda adalah AI Recommender Gadget profesional.
@@ -286,7 +357,8 @@ Urutkan array berdasarkan matchScore tertinggi ke terendah.`;
           matchScore: typeof aiInfo.matchScore === 'number' ? aiInfo.matchScore : calculateHeuristicScore(dev, preferences),
           aiTag: aiInfo.aiTag || getFallbackTag(primaryUse, dev),
           aiReasoning: aiInfo.aiReasoning || getFallbackReasoning(dev, primaryUse, budget),
-          pros: Array.isArray(aiInfo.pros) ? aiInfo.pros : getFallbackPros(dev)
+          pros: Array.isArray(aiInfo.pros) ? aiInfo.pros : getFallbackPros(dev),
+          isFallback: false
         };
       });
 
@@ -296,15 +368,16 @@ Urutkan array berdasarkan matchScore tertinggi ke terendah.`;
     console.warn('Gemini Smart Match evaluation fallback:', err.message);
   }
 
-  // Algorithmic Fallback for Smart Match
+  // Algorithmic Fallback for Smart Match with honest labeling
   return devices.map(dev => {
     const score = calculateHeuristicScore(dev, preferences);
     return {
       ...dev,
       matchScore: score,
-      aiTag: getFallbackTag(primaryUse, dev),
-      aiReasoning: getFallbackReasoning(dev, primaryUse, budget),
-      pros: getFallbackPros(dev)
+      aiTag: getFallbackTag(primaryUse, dev) + ' (Sistem)',
+      aiReasoning: `[Pencocokan Spesifikasi Sistem] AI Gemini sedang sibuk. Skor dihitung berdasarkan keselarasan spesifikasi RAM (${dev.ram || 'standar'}), storage (${dev.storage || 'standar'}), dan kesesuaian harga terhadap budget Rp ${budget.toLocaleString('id-ID')}.`,
+      pros: getFallbackPros(dev),
+      isFallback: true
     };
   }).sort((a, b) => b.matchScore - a.matchScore);
 }
@@ -352,7 +425,7 @@ function calculateHeuristicScore(device, { budget, primaryUse, brandPreference }
   return Math.max(10, Math.min(99, score));
 }
 
-function getFallbackTag(primaryUse, device) {
+function getFallbackTag(primaryUse) {
   if (primaryUse === 'Hardcore Gaming') return 'Gaming Powerhouse';
   if (primaryUse === 'Creative Pro') return 'Pro Performance';
   if (primaryUse === 'Productivity') return 'Productivity Beast';
@@ -365,7 +438,7 @@ function getFallbackReasoning(device, primaryUse, budget) {
 
 function getFallbackPros(device) {
   const pros = [];
-  if (device.ram) pros.push(`RAM ${device.ram} responsive`);
+  if (device.ram) pros.push(`RAM ${device.ram} responsif`);
   if (device.storage) pros.push(`Storage ${device.storage}`);
   if (device.verifiedByTrustX) pros.push('Terverifikasi TrustX');
   return pros.length ? pros : ['Harga bersaing', 'Kondisi bagus'];
@@ -373,6 +446,7 @@ function getFallbackPros(device) {
 
 /**
  * AI Auto-Fill Listing Details (Specs, Description, Price, Brand, etc.)
+ * Strictly avoids returning fake/dummy specifications if the AI cannot evaluate.
  */
 export async function autoFillDeviceDetails({ deviceName = '', category = 'smartphone' }) {
   if (!deviceName.trim()) {
@@ -419,29 +493,12 @@ Harap analisis model tersebut secara akurat. Kembalikan HANYA JSON valid tanpa m
       };
     }
   } catch (err) {
-    console.warn('Gemini AutoFill fallback triggered:', err.message);
+    console.warn('Gemini AutoFill failed:', err.message);
+    // Do NOT return fake/dummy specs that deceive the seller. Throw a clear, honest error instead.
+    throw new Error(`Layanan AI Gemini sedang mengalami lonjakan antrean: "${err.message}". Silakan coba beberapa saat lagi atau lengkapi spesifikasi secara manual.`);
   }
 
-  // Fallback if AI API fails
-  const brandFallback = deviceName.toLowerCase().includes('iphone') || deviceName.toLowerCase().includes('apple') ? 'Apple' :
-                        deviceName.toLowerCase().includes('samsung') ? 'Samsung' :
-                        deviceName.toLowerCase().includes('xiaomi') || deviceName.toLowerCase().includes('poco') ? 'Xiaomi' :
-                        deviceName.toLowerCase().includes('asus') || deviceName.toLowerCase().includes('rog') ? 'ASUS' : 'Lainnya';
-
-  return {
-    name: deviceName,
-    brand: brandFallback,
-    category: category || 'smartphone',
-    price: 6500000,
-    condition: 'Like New',
-    ram: '8GB',
-    storage: '128GB',
-    processor: 'Octa-core High Performance',
-    screen: '6.5 inch Full HD+ Display',
-    camera: '50MP Main Camera',
-    battery: '5000 mAh Battery',
-    description: `Unit ${deviceName} dalam kondisi fisik dan performa yang sangat prima. Layar jernih, responsif, dan baterai efisien. Cocok untuk kebutuhan harian, fotografi, maupun multitasking.`
-  };
+  throw new Error('Gagal menghasilkan rincian spesifikasi perangkat dari AI Gemini.');
 }
 
 /**
@@ -473,19 +530,24 @@ Berikan hasil audit AI Escrow resmi dalam format JSON murni:
   try {
     const result = await callGemini(prompt);
     if (result && typeof result.escrowScore === 'number') {
-      finalAudit = result;
+      finalAudit = {
+        ...result,
+        isFallback: false
+      };
     }
   } catch (err) {
     console.warn('Gemini AI Escrow fallback triggered:', err.message);
   }
 
+  // Honest fallback: If AI escrow service is busy, mark as pending physical inspection rather than fake genuine hash
   if (!finalAudit) {
     finalAudit = {
-      escrowScore: 96,
-      status: "VERIFIED_PASSED",
-      verificationBadge: "✓ Terverifikasi Asli oleh Sistem AI Escrow",
-      auditSummary: `Kondisi fisik ${oldDeviceName} (${oldDeviceCondition}) telah diaudit & lolos verifikasi standar keamanan AI Escrow.`,
-      securityHash: "ESCROW-AI-VERIFIED-GENUINE"
+      escrowScore: 90,
+      status: "PENDING_PHYSICAL_INSPECTION",
+      verificationBadge: "⏳ Menunggu Verifikasi Fisik Kurator",
+      auditSummary: `Layanan AI Escrow otomatis sedang sibuk. Unit ${oldDeviceName} (${oldDeviceCondition}) akan diverifikasi secara langsung oleh tim kurator saat unit tiba di hub inspeksi.`,
+      securityHash: "PENDING-MANUAL-INSPECTION",
+      isFallback: true
     };
   }
 

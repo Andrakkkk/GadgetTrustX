@@ -85,7 +85,8 @@ export default function PriceCheckerPage() {
           priceRange: data.priceRange || [Math.round(data.price * 0.9), Math.round(data.price * 1.1)],
           confidence: data.confidence || 90,
           marketDemand: data.marketDemand || 'High',
-          reasoning: data.reasoning
+          reasoning: data.reasoning,
+          isFallback: Boolean(data.isFallback)
         });
       } else {
         alert('Gagal menganalisis estimasi harga AI. Silakan coba lagi.');
@@ -244,9 +245,18 @@ export default function PriceCheckerPage() {
                       Rentang Wajar: {formatPrice(result.priceRange[0])} — {formatPrice(result.priceRange[1])}
                     </div>
 
+                    {result.isFallback && (
+                      <div className="mb-4 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold">
+                        <span>⚠️</span>
+                        <span>Mode Cadangan: AI Gemini sedang antre tinggi, menampilkan estimasi formula pasar lokal.</span>
+                      </div>
+                    )}
+
                     {result.reasoning && (
                       <p className="text-xs text-slate-400 mb-8 leading-relaxed p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-                        <span className="font-bold text-blue-400">Analisis AI: </span>
+                        <span className={`font-bold ${result.isFallback ? 'text-amber-400' : 'text-blue-400'}`}>
+                          {result.isFallback ? 'Perhitungan Sistem Cadangan: ' : 'Analisis Gemini AI: '}
+                        </span>
                         {result.reasoning}
                       </p>
                     )}

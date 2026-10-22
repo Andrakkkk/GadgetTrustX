@@ -148,7 +148,8 @@ function TradeInContent() {
       setAiValuation({
         confidence: 85,
         marketDemand: 'Moderate',
-        reasoning: `Perkiraan AI pasar berdasarkan kondisi ${formData.condition} dan kapasitas ${formData.storage}.`
+        reasoning: `[Estimasi Standar Sistem] Layanan AI offline. Nilai dihitung berdasarkan kondisi ${formData.condition} dan kapasitas ${formData.storage}.`,
+        isFallback: true
       });
       setStep(2);
     } finally {

@@ -83,7 +83,7 @@ export default function SmartMatchingPage() {
         let results = devices.map(d => ({
           ...d,
           matchScore: d.price <= preferences.budget ? 90 : 60,
-          aiTag: 'Rekomendasi AI',
+          aiTag: 'Rekomendasi Sistem',
           aiReasoning: `Perangkat ${d.name} cocok untuk ${preferences.primaryUse || 'kebutuhan harian'} dengan spesifikasi ${d.ram || ''} ${d.storage || ''}.`
         }));
         setMatches(results);
