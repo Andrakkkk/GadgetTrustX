@@ -190,7 +190,7 @@ Sesuai standar ISO/IEC/IEEE 29119-2, seluruh kebutuhan di atas dikelompokkan ke 
 | **TCond-011, 012** | *Boundary Value Analysis* | Menguji nilai batas maksimum kuantitas keranjang belanja terhadap sisa stok inventori. |
 | **TCond-013** | *Equivalence Partitioning* | Menguji pembaruan subtotal keranjang belanja saat item dihapus. |
 | **TCond-014, 015** | *Equivalence Partitioning* | Menguji kalkulasi finansial invoice pembayaran dan pembuatan token Snap Midtrans. |
-| **TCond-016, 017** | *State Transition Testing* | Menguji transisi antarmuka pembayaran pembeli (Checkout Form -> Midtrans Modal Open -> Modal Closed/Dismissed). |
+| **TCond-016, 017** | *Equivalence Partitioning* | Mempartisi respon checkout pembeli (pemilihan kurir pengiriman valid vs penanganan penutupan dialog bayar). |
 | **TCond-018, 019, 020** | *Boundary Value Analysis & Luhn* | Menguji batas digit nomor IMEI (14, 15, 16 digit) dan validitas algoritma checksum modulo 10. |
 | **TCond-021, 022** | *Equivalence Partitioning & Fallback* | Menguji keakuratan estimasi harga model Gemini AI dan mekanisme fail-safe fallback lokal. |
 | **TCond-023, 024** | *Boundary Value Analysis* | Menguji nilai batas minimum (Rp 1.000.000) dan maksimum (Rp 30.000.000) pada slider budget. |
