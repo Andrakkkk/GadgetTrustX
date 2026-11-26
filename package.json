@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:unit": "node --experimental-test-module-mocks --test tests/unit/*.test.mjs",
+    "test:unit:coverage": "node --experimental-test-module-mocks --test --experimental-test-coverage --test-reporter=tap --test-coverage-include=src/utils/validation.js --test-coverage-include=src/app/api/auth/register/route.js tests/unit/*.test.mjs",
     "test:usability": "node tests/run-usability.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
